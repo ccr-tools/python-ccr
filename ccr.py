@@ -1,6 +1,5 @@
 #!/usr/bin/python2
 # A simple Python lib to access the Chakra Community Repository
-# TODO: Make it usable in both python2 and python3
 
 __all__ = [ "search", "info", "msearch" ]
 
@@ -55,8 +54,6 @@ def msearch(maintainer):
 
 
 
-
-
 if __name__ == "__main__":
     r = info("snort")
     print("Name           : %s" % r.Name)
@@ -68,5 +65,4 @@ if __name__ == "__main__":
     print("Description    : %s" % r.Description)
     print("OutOfDate      : %s" % r.OutOfDate)
     print("Votes          : %s" % r.NumVotes)
-
 
