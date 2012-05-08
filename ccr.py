@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 # A simple Python lib to access the Chakra Community Repository
-# Should work in python>=2.7, including python3
+# TODO: Make it usable in both python2 and python3
 
 __all__ = [ "search", "info", "msearch" ]
 
