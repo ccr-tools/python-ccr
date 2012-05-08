@@ -43,7 +43,7 @@ def search(keywords):
 
 
 def info(package):
-    """return information for a specific package - returns results as a list"""
+    """get information for a specific package - returns results as a list"""
     results = get_ccr_json(INFO, package)
     return results.results
 
