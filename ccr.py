@@ -2,6 +2,7 @@
 # A simple Python lib to access the Chakra Community Repository
 
 __all__ = [ "search", "info", "msearch" ]
+__version__ = 0.1
 
 import json
 import contextlib
