@@ -122,6 +122,10 @@ def disown(package, opener):
     """disown a CCR package"""
 
 
+def submit(file, category, opener):
+    """submit a package to CCR"""
+
+
 # Other
 def getlatest(num):
     """get the info for the latest num CCR packages, returns as a list"""
