@@ -84,6 +84,47 @@ def vote(package, opener):
     return response
 
 
+def unvote(package, opener):
+    """unvote for a package on CCR"""
+
+
+def check(package, opener):
+    """check to see if you have already voted for a package"""
+
+
+def flag(package, opener):
+    """flag a CCR package as out of date"""
+
+
+def unflag(package, opener):
+    """unflag a CCR package as out of date"""
+
+
+def delete(package, opener):
+    """delete a package from CCR"""
+
+
+def notify(package, opener):
+    """set the notify flag on a package"""
+
+
+def unnotify(package, opener):
+    """unset the notify flag on a package"""
+
+
+def adopt(package, opener):
+    """adopt an orphaned CCR package"""
+
+
+def disown(package, opener):
+    """disown a CCR package"""
+
+
+def 
+
+
+
+
 
 if __name__ == "__main__":
     r = info("snort")
