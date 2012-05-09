@@ -6,8 +6,9 @@ __version__ = 0.1
 
 import json
 import contextlib
+import urllib
 import urllib2
-import cookielib as cookie
+import cookielib
 
 
 class Struct(dict):
@@ -56,29 +57,27 @@ def msearch(maintainer):
 
 def login(username, password, rememberme='off'):
     """log in to the CCR"""
-    data = {"user": username,
-            "passwd": password,
-            "remember_me": rememberme
-            }
-    cjar = cookie.CookieJar()
-    # FIXME: This is ugly, and probably the wrong way to do this. 
-    ccrlogin = urllib2.build_opener(urllib2.HTTPCookieProcessor(cjar),
-            urllib2.HTTPHandler())
-    request = urllib2.Request(CCR_BASE, data)
-    ccrlogin.open(request)
-    return ccrlogin
+    data = urllib.urlencode({"user": username,
+                             "passwd": password,
+                             "remember_me": rememberme
+                             })
+    cjar = cookielib.CookieJar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cjar))
+    opener.open(CCR_BASE, data)
+    return opener
 
 
-def vote(package, ccrlogin):
+def vote(package, opener):
     """vote for a package on CCR"""
     # TODO: Should this call login(), instead of the way ot works now?
     ccrid = info(package).ID
     # FIXME: the ccrid thing below is bad, there has to be a better way
-    data = {"IDs[%s]" % (ccrid): 1,
-            "ID": ccrid,
-            "do_Vote": 1
-            }
-    return ccrlogin.open(urllib2.Request(CCR_BASE, data))
+    data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
+                             "ID": ccrid,
+                             "do_Vote": 1
+                             })
+    response = opener.open(CCR_BASE, data)
+    return respose.read()
 
 
 
