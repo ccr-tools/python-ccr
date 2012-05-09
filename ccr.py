@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-# A simple Python lib to access the Chakra Community Repository
+"""A simple Python lib to access the Chakra Community Repository"""
 
 __all__ = [ "search", "info", "msearch", "login", "vote" ]
 __version__ = 0.1
@@ -56,7 +56,11 @@ def msearch(maintainer):
 
 
 def login(username, password, rememberme='off'):
-    """log in to the CCR"""
+    """
+    log in to the CCR - use like:
+    >>> opener = ccr.login(username, password)
+    >>> ccr.vote(package, opener)
+    """
     data = urllib.urlencode({"user": username,
                              "passwd": password,
                              "remember_me": rememberme
@@ -69,7 +73,7 @@ def login(username, password, rememberme='off'):
 
 def vote(package, opener):
     """vote for a package on CCR"""
-    # TODO: Should this call login(), instead of the way ot works now?
+    # TODO: Should this call login(), instead of the way it works now?
     ccrid = info(package).ID
     # FIXME: the ccrid thing below is bad, there has to be a better way
     data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
