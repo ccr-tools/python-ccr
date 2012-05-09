@@ -19,4 +19,4 @@ setup(name='ccr',
                    "Programming Language :: Python",
                    "Topic :: Internet",
                    ]
-      )
+     )
