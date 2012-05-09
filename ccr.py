@@ -21,7 +21,8 @@ class Struct(dict):
         del self[name]
 
 
-CCR_RPC = "http://chakra-linux.org/ccr/rpc.php?type="
+CCR_BASE = "http://chakra-linux.org/ccr/"
+CCR_RPC = CCR_BASE + "rpc.php?type="
 ARG = "&arg="
 SEARCH = "search"
 INFO = "info"
@@ -52,6 +53,10 @@ def msearch(maintainer):
     """search for packages owned by 'maintainer' - returns results as a list"""
     results = get_ccr_json(MSEARCH, maintainer)
     return results.results
+
+
+def login(username, password):
+    """log in to the CCR"""
 
 
 
