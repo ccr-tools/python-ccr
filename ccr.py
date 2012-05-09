@@ -25,6 +25,7 @@ class Struct(dict):
 
 CCR_BASE = "http://chakra-linux.org/ccr/"
 CCR_RPC = CCR_BASE + "rpc.php?type="
+CCR_VOTE = CCR_BASE + "packages.php"
 ARG = "&arg="
 SEARCH = "search"
 INFO = "info"
@@ -73,15 +74,14 @@ def login(username, password, rememberme='off'):
 
 def vote(package, opener):
     """vote for a package on CCR"""
-    # TODO: Should this call login(), instead of the way it works now?
     ccrid = info(package).ID
-    # FIXME: the ccrid thing below is bad, there has to be a better way
+    # FIXME: the IDs[%s] thing below is bad, there has to be a better way
     data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
                              "ID": ccrid,
                              "do_Vote": 1
                              })
-    response = opener.open(CCR_BASE, data)
-    return respose.read()
+    response = opener.open(CCR_VOTE, data)
+    return response
 
 
 
