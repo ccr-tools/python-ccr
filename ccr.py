@@ -32,6 +32,7 @@ INFO = "info"
 MSEARCH = "msearch"
 
 
+# CCR searching and info
 def get_ccr_json(method, arg):
     """returns the parsed json"""
     with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
@@ -56,6 +57,7 @@ def msearch(maintainer):
     return results.results
 
 
+# CCR actions
 def login(username, password, rememberme='off'):
     """
     log in to the CCR - use like:
@@ -120,8 +122,13 @@ def disown(package, opener):
     """disown a CCR package"""
 
 
-def 
+# Other
+def getlatest(num):
+    """get the info for the latest num CCR packages, returns as a list"""
 
+
+def geturl(package):
+    """get the URL of the package's CCR page"""
 
 
 
