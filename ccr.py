@@ -1,12 +1,13 @@
 #!/usr/bin/python2
 # A simple Python lib to access the Chakra Community Repository
 
-__all__ = [ "search", "info", "msearch" ]
+__all__ = [ "search", "info", "msearch", "login", "vote" ]
 __version__ = 0.1
 
 import json
 import contextlib
 import urllib2
+import cookielib as cookie
 
 
 class Struct(dict):
@@ -30,9 +31,7 @@ MSEARCH = "msearch"
 
 
 def get_ccr_json(method, arg):
-    """
-    returns the parsed json - method can be one of: search, info, or msearch.
-    """
+    """returns the parsed json"""
     with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
         return json.loads(text.read(), object_hook=Struct)
 
@@ -55,8 +54,31 @@ def msearch(maintainer):
     return results.results
 
 
-def login(username, password):
+def login(username, password, rememberme='off'):
     """log in to the CCR"""
+    data = {"user": username,
+            "passwd": password,
+            "remember_me": rememberme
+            }
+    cjar = cookie.CookieJar()
+    # FIXME: This is ugly, and probably the wrong way to do this. 
+    ccrlogin = urllib2.build_opener(urllib2.HTTPCookieProcessor(cjar),
+            urllib2.HTTPHandler())
+    request = urllib2.Request(CCR_BASE, data)
+    ccrlogin.open(request)
+    return ccrlogin
+
+
+def vote(package, ccrlogin):
+    """vote for a package on CCR"""
+    # TODO: Should this call login(), instead of the way ot works now?
+    ccrid = info(package).ID
+    # FIXME: the ccrid thing below is bad, there has to be a better way
+    data = {"IDs[%s]" % (ccrid): 1,
+            "ID": ccrid,
+            "do_Vote": 1
+            }
+    return ccrlogin.open(urllib2.Request(CCR_BASE, data))
 
 
 
