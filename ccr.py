@@ -36,8 +36,8 @@ MSEARCH = "msearch"
 
 
 # Custom error codes
-E_ALLOK = 0
-E_GENER = 1
+E_ALLOK = 1
+E_GENER = 0
 E_NOPKG = 2
 E_NOFIL = 2
 E_NOUSR = 2
@@ -100,20 +100,11 @@ def login(username, password, rememberme='off'):
         opener.open(CCR_BASE, data)
     except urllib2.HTTPError:
         return E_NETWK
-    checkstr = "?SeB=m&K=" + username
+    checkstr = "Logged-in as: <b>" + username
     if checkstr in opener.open(CCR_BASE).read():
         return opener
     else:
         return E_LOGIN
-
-
-def check_response(response):
-    """Function for internal use - checks to see if vote/unvote worked"""
-    checkstr = ""
-    if checkstr in reponse:
-        return E_ALLOK
-    else:
-        return E_GENER
 
 
 def vote(package, opener):
@@ -127,8 +118,9 @@ def vote(package, opener):
                              "ID": ccrid,
                              "do_Vote": 1
                              })
-    try: 
-        return opener.open(CCR_PKG, data)
+    try:
+        response = opener.open(CCR_PKG, data)
+        return check(package, opener)
     except urllib2.HTTPError:
         return E_NETWK
 
@@ -144,8 +136,12 @@ def unvote(package, opener):
                              "ID": ccrid,
                              "do_UnVote": 1
                              })
-    try: 
-        return opener.open(CCR_PKG, data)
+    try:
+        response = opener.open(CCR_PKG, data)
+        if check(package, opener) == E_GENER:
+            return E_ALLOK
+        else:
+            return E_GENER
     except urllib2.HTTPError:
         return E_NETWK
 
@@ -156,11 +152,12 @@ def check(package, opener):
         ccrid = info(package).ID
     except AttributeError:
         return E_NOPKG
-    data = urllib.urlencode({"ID": ccrid})
-    response = opener.open(CCR_PKG, data)
-    # do html-parsing stuff here
-    try: 
-        return opener.open(CCR_PKG, data)
+    try:
+        response = opener.open(CCR_PKG + "?ID=" + ccrid)
+        if "class='button' name='do_UnVote' value='UnVote'" in response.read():
+            return E_ALLOK
+        else:
+            return E_GENER
     except urllib2.HTTPError:
         return E_NETWK
 
