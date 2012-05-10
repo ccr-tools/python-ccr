@@ -35,29 +35,52 @@ INFO = "info"
 MSEARCH = "msearch"
 
 
+# Custom error codes
+E_ALLOK = 0
+E_GENER = 1
+E_NOPKG = 2
+E_NOFIL = 2
+E_NOUSR = 2
+E_LOGIN = 2
+E_NETWK = 3
+
+
+
 # CCR searching and info
 def get_ccr_json(method, arg):
     """returns the parsed json"""
-    with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
-        return json.loads(text.read(), object_hook=Struct)
+    try:
+        with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
+            return json.loads(text.read(), object_hook=Struct)
+    except urllib2.HTTPError:
+        return E_NETWK
 
 
 def search(keywords):
     """search for some keywords - returns results as a list"""
     results = get_ccr_json(SEARCH, keywords)
-    return results.results
+    try: 
+       return results.results
+    except AttributeError:
+       return results
 
 
 def info(package):
     """get information for a specific package - returns results as a list"""
     results = get_ccr_json(INFO, package)
-    return results.results
+    try:
+        return results.results
+    except AttributeError:
+        return results
 
 
 def msearch(maintainer):
     """search for packages owned by 'maintainer' - returns results as a list"""
     results = get_ccr_json(MSEARCH, maintainer)
-    return results.results
+    try:
+        return results.results
+    except AttributeError:
+        return results
 
 
 # CCR actions
@@ -73,132 +96,201 @@ def login(username, password, rememberme='off'):
                              })
     cjar = cookielib.CookieJar()
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cjar))
-    opener.open(CCR_BASE, data)
-    return opener
+    try: 
+        opener.open(CCR_BASE, data)
+    except urllib2.HTTPError:
+        return E_NETWK
+    checkstr = "?SeB=m&K=" + username
+    if checkstr in opener.open(CCR_BASE).read():
+        return opener
+    else:
+        return E_LOGIN
 
 
 def check_response(response):
     """Function for internal use - checks to see if vote/unvote worked"""
+    checkstr = ""
+    if checkstr in reponse:
+        return E_ALLOK
+    else:
+        return E_GENER
 
 
 def vote(package, opener):
     """vote for a package in the CCR"""
-    ccrid = info(package).ID
+    try:
+        ccrid = info(package).ID
+    except AttributeError:
+        return E_NOPKG
     # FIXME: the IDs[%s] thing below is bad, there has to be a better way
     data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
                              "ID": ccrid,
                              "do_Vote": 1
                              })
-    response = opener.open(CCR_PKG, data)
-    return response
+    try: 
+        return opener.open(CCR_PKG, data)
+    except urllib2.HTTPError:
+        return E_NETWK
+
 
 
 def unvote(package, opener):
     """unvote for a package on CCR"""
-    ccrid = info(package).ID
+    try:
+        ccrid = info(package).ID
+    except AttributeError:
+        return E_NOPKG
     data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
                              "ID": ccrid,
                              "do_UnVote": 1
                              })
-    response = opener.open(CCR_PKG, data)
-    return response
+    try: 
+        return opener.open(CCR_PKG, data)
+    except urllib2.HTTPError:
+        return E_NETWK
 
 
 def check(package, opener):
     """check to see if you have already voted for a package"""
-    ccrid = info(package).ID
+    try:
+        ccrid = info(package).ID
+    except AttributeError:
+        return E_NOPKG
     data = urllib.urlencode({"ID": ccrid})
     response = opener.open(CCR_PKG, data)
     # do html-parsing stuff here
-    return response
+    try: 
+        return opener.open(CCR_PKG, data)
+    except urllib2.HTTPError:
+        return E_NETWK
 
 
 def flag(package, opener):
     """flag a CCR package as out of date"""
-    ccrid = info(package).ID
+    try:
+        ccrid = info(package).ID
+    except AttributeError:
+        return E_NOPKG
     data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
                              "ID": ccrid,
                              "do_Flag": 1
                              })
-    response = opener.open(CCR_PKG, data)
-    return response
+    try: 
+        return opener.open(CCR_PKG, data)
+    except urllib2.HTTPError:
+        return E_NETWK
 
 
 def unflag(package, opener):
     """unflag a CCR package as out of date"""
-    ccrid = info(package).ID
+    try:
+        ccrid = info(package).ID
+    except AttributeError:
+        return E_NOPKG
     data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
                              "ID": ccrid,
                              "do_UnFlag": 1
                              })
-    response = opener.open(CCR_PKG, data)
-    return response
+    try: 
+        return opener.open(CCR_PKG, data)
+    except urllib2.HTTPError:
+        return E_NETWK
 
 
 def delete(package, opener):
     """delete a package from CCR"""
-    ccrid = info(package).ID
+    try:
+        ccrid = info(package).ID
+    except AttributeError:
+        return E_NOPKG
     data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
                              "ID": ccrid,
                              "do_Delete": 1
                              })
-    response = opener.open(CCR_PKG, data)
-    return response
+    try: 
+        return opener.open(CCR_PKG, data)
+    except urllib2.HTTPError:
+        return E_NETWK
 
 
 def notify(package, opener):
     """set the notify flag on a package"""
-    ccrid = info(package).ID
+    try:
+        ccrid = info(package).ID
+    except AttributeError:
+        return E_NOPKG
     data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
                              "ID": ccrid,
                              "do_Notify": 1
                              })
-    response = opener.open(CCR_PKG, data)
-    return response
+    try: 
+        return opener.open(CCR_PKG, data)
+    except urllib2.HTTPError:
+        return E_NETWK
 
 
 def unnotify(package, opener):
     """unset the notify flag on a package"""
-    ccrid = info(package).ID
+    try:
+        ccrid = info(package).ID
+    except AttributeError:
+        return E_NOPKG
     data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
                              "ID": ccrid,
                              "do_UnNotify": 1
                              })
-    response = opener.open(CCR_PKG, data)
-    return response
+    try: 
+        return opener.open(CCR_PKG, data)
+    except urllib2.HTTPError:
+        return E_NETWK
 
 
 def adopt(package, opener):
     """adopt an orphaned CCR package"""
-    ccrid = info(package).ID
+    try:
+        ccrid = info(package).ID
+    except AttributeError:
+        return E_NOPKG
     data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
                              "ID": ccrid,
                              "do_Adopt": 1
                              })
-    response = opener.open(CCR_PKG, data)
-    return response
+    try: 
+        return opener.open(CCR_PKG, data)
+    except urllib2.HTTPError:
+        return E_NETWK
 
 
 def disown(package, opener):
     """disown a CCR package"""
-    ccrid = info(package).ID
+    try:
+        ccrid = info(package).ID
+    except AttributeError:
+        return E_NOPKG
     data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
                              "ID": ccrid,
                              "do_Disown": 1
                              })
-    response = opener.open(CCR_PKG, data)
-    return response
+    try: 
+        return opener.open(CCR_PKG, data)
+    except urllib2.HTTPError:
+        return E_NETWK
 
 
 def submit(file, category, opener):
     """submit a package to CCR"""
-    ccrid = info(package).ID
+    try:
+        ccrid = info(package).ID
+    except AttributeError:
+        return E_NOPKG
     data = urllib.urlencode({"pkgsubmit": 1,
                              "category": categoryID,
                              "pfile": "@%s" % (file)
                              })
-    response = opener.open(CCR_SUBMIT, data)
-    return response
+    try: 
+        return opener.open(CCR_SUBMIT, data)
+    except urllib2.HTTPError:
+        return E_NETWK
 
 
 # Other
@@ -208,7 +300,10 @@ def getlatest(num):
 
 def geturl(package):
     """get the URL of the package's CCR page"""
-    ccrid = info(package).ID
+    try:
+        ccrid = info(package).ID
+    except AttributeError:
+        return E_NOPKG
     url = CCR_PKG + "?ID=" + ccrid
     return url
 
