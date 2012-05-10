@@ -1,7 +1,9 @@
 #!/usr/bin/python2
 """A simple Python lib to access the Chakra Community Repository"""
 
-__all__ = [ "search", "info", "msearch", "login", "vote" ]
+__all__ = [ "search", "info", "msearch", "login", "vote", "unvote",
+            "flag," "unflag", "notify", "unnotify", "disown", "adopt",
+            "geturl" ]
 __version__ = 0.1
 
 import json
@@ -25,7 +27,8 @@ class Struct(dict):
 
 CCR_BASE = "http://chakra-linux.org/ccr/"
 CCR_RPC = CCR_BASE + "rpc.php?type="
-CCR_VOTE = CCR_BASE + "packages.php"
+CCR_PKG = CCR_BASE + "packages.php"
+CCR_SUBMIT = CCR_BASE + "pkgsubmit.php"
 ARG = "&arg="
 SEARCH = "search"
 INFO = "info"
@@ -74,56 +77,128 @@ def login(username, password, rememberme='off'):
     return opener
 
 
+def check_response(response):
+    """Function for internal use - checks to see if vote/unvote worked"""
+
+
 def vote(package, opener):
-    """vote for a package on CCR"""
+    """vote for a package in the CCR"""
     ccrid = info(package).ID
     # FIXME: the IDs[%s] thing below is bad, there has to be a better way
     data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
                              "ID": ccrid,
                              "do_Vote": 1
                              })
-    response = opener.open(CCR_VOTE, data)
+    response = opener.open(CCR_PKG, data)
     return response
 
 
 def unvote(package, opener):
     """unvote for a package on CCR"""
+    ccrid = info(package).ID
+    data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
+                             "ID": ccrid,
+                             "do_UnVote": 1
+                             })
+    response = opener.open(CCR_PKG, data)
+    return response
 
 
 def check(package, opener):
     """check to see if you have already voted for a package"""
+    ccrid = info(package).ID
+    data = urllib.urlencode({"ID": ccrid})
+    response = opener.open(CCR_PKG, data)
+    # do html-parsing stuff here
+    return response
 
 
 def flag(package, opener):
     """flag a CCR package as out of date"""
+    ccrid = info(package).ID
+    data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
+                             "ID": ccrid,
+                             "do_Flag": 1
+                             })
+    response = opener.open(CCR_PKG, data)
+    return response
 
 
 def unflag(package, opener):
     """unflag a CCR package as out of date"""
+    ccrid = info(package).ID
+    data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
+                             "ID": ccrid,
+                             "do_UnFlag": 1
+                             })
+    response = opener.open(CCR_PKG, data)
+    return response
 
 
 def delete(package, opener):
     """delete a package from CCR"""
+    ccrid = info(package).ID
+    data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
+                             "ID": ccrid,
+                             "do_Delete": 1
+                             })
+    response = opener.open(CCR_PKG, data)
+    return response
 
 
 def notify(package, opener):
     """set the notify flag on a package"""
+    ccrid = info(package).ID
+    data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
+                             "ID": ccrid,
+                             "do_Notify": 1
+                             })
+    response = opener.open(CCR_PKG, data)
+    return response
 
 
 def unnotify(package, opener):
     """unset the notify flag on a package"""
+    ccrid = info(package).ID
+    data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
+                             "ID": ccrid,
+                             "do_UnNotify": 1
+                             })
+    response = opener.open(CCR_PKG, data)
+    return response
 
 
 def adopt(package, opener):
     """adopt an orphaned CCR package"""
+    ccrid = info(package).ID
+    data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
+                             "ID": ccrid,
+                             "do_Adopt": 1
+                             })
+    response = opener.open(CCR_PKG, data)
+    return response
 
 
 def disown(package, opener):
     """disown a CCR package"""
+    ccrid = info(package).ID
+    data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
+                             "ID": ccrid,
+                             "do_Disown": 1
+                             })
+    response = opener.open(CCR_PKG, data)
+    return response
 
 
 def submit(file, category, opener):
     """submit a package to CCR"""
+    ccrid = info(package).ID
+    data = urllib.urlencode({"pkgsubmit": 1,
+                             "category": categoryID,
+                             "pfile": "@%s" % (file)
+                             })
+    response = opener.open(CCR_SUBMIT, data)
+    return response
 
 
 # Other
@@ -133,7 +208,9 @@ def getlatest(num):
 
 def geturl(package):
     """get the URL of the package's CCR page"""
-
+    ccrid = info(package).ID
+    url = CCR_PKG + "?ID=" + ccrid
+    return url
 
 
 
