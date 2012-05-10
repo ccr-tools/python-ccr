@@ -1,10 +1,10 @@
 #!/usr/bin/python2
 """A simple Python lib to access the Chakra Community Repository"""
 
-__all__ = [ "search", "info", "msearch", "login", "vote", "unvote",
-            "flag," "unflag", "notify", "unnotify", "disown", "adopt",
-            "geturl" ]
-__version__ = 0.1
+__all__ = [ "adopt", "disown", "flag", "geturl", "info", "login",
+            "msearch", "notify", "search", "unflag", "unnotify",
+            "unvote", "vote" ]
+__version__ = 0.2
 
 import json
 import contextlib
@@ -36,14 +36,13 @@ MSEARCH = "msearch"
 
 
 # Custom error codes
-E_ALLOK = 1
 E_GENER = 0
+E_ALLOK = 1
 E_NOPKG = 2
 E_NOFIL = 2
 E_NOUSR = 2
 E_LOGIN = 2
 E_NETWK = 3
-
 
 
 # CCR searching and info
@@ -125,7 +124,6 @@ def vote(package, opener):
         return E_NETWK
 
 
-
 def unvote(package, opener):
     """unvote for a package on CCR"""
     try:
@@ -173,7 +171,11 @@ def flag(package, opener):
                              "do_Flag": 1
                              })
     try: 
-        return opener.open(CCR_PKG, data)
+        response = opener.open(CCR_PKG, data)
+        if "class='button' name='do_UnFlag' value=" in response.read():
+            return E_ALLOK
+        else:
+            return E_GENER
     except urllib2.HTTPError:
         return E_NETWK
 
@@ -189,7 +191,11 @@ def unflag(package, opener):
                              "do_UnFlag": 1
                              })
     try: 
-        return opener.open(CCR_PKG, data)
+        response = opener.open(CCR_PKG, data)
+        if "class='button' name='do_Flag' value=" in response.read():
+            return E_ALLOK
+        else:
+            return E_GENER
     except urllib2.HTTPError:
         return E_NETWK
 
@@ -205,7 +211,11 @@ def delete(package, opener):
                              "do_Delete": 1
                              })
     try: 
-        return opener.open(CCR_PKG, data)
+        response = opener.open(CCR_PKG, data)
+        if "WHAT GOES HERE?" in response.read():
+            return E_ALLOK
+        else:
+            return E_GENER
     except urllib2.HTTPError:
         return E_NETWK
 
@@ -221,7 +231,11 @@ def notify(package, opener):
                              "do_Notify": 1
                              })
     try: 
-        return opener.open(CCR_PKG, data)
+        response = opener.open(CCR_PKG, data)
+        if "class='button' name='do_UnNotify' value=" in response.read():
+            return E_ALLOK
+        else:
+            return E_GENER
     except urllib2.HTTPError:
         return E_NETWK
 
@@ -237,7 +251,11 @@ def unnotify(package, opener):
                              "do_UnNotify": 1
                              })
     try: 
-        return opener.open(CCR_PKG, data)
+        response = opener.open(CCR_PKG, data)
+        if "class='button' name='do_Notify' value=" in response.read():
+            return E_ALLOK
+        else:
+            return E_GENER
     except urllib2.HTTPError:
         return E_NETWK
 
@@ -253,7 +271,11 @@ def adopt(package, opener):
                              "do_Adopt": 1
                              })
     try: 
-        return opener.open(CCR_PKG, data)
+        response = opener.open(CCR_PKG, data)
+        if "class='button' name='do_Disown' value=" in response.read():
+            return E_ALLOK
+        else:
+            return E_GENER
     except urllib2.HTTPError:
         return E_NETWK
 
@@ -269,23 +291,27 @@ def disown(package, opener):
                              "do_Disown": 1
                              })
     try: 
-        return opener.open(CCR_PKG, data)
+        response = opener.open(CCR_PKG, data)
+        if "class='button' name='do_Adopt' value=" in response.read():
+            return E_ALLOK
+        else:
+            return E_GENER
     except urllib2.HTTPError:
         return E_NETWK
 
 
 def submit(file, category, opener):
     """submit a package to CCR"""
-    try:
-        ccrid = info(package).ID
-    except AttributeError:
-        return E_NOPKG
     data = urllib.urlencode({"pkgsubmit": 1,
-                             "category": categoryID,
+                             "category": category,
                              "pfile": "@%s" % (file)
                              })
     try: 
-        return opener.open(CCR_SUBMIT, data)
+        response = opener.open(CCR_SUBMIT, data)
+        if "WHAT GOES HERE?" in response.read():
+            return E_ALLOK
+        else:
+            return response.read()
     except urllib2.HTTPError:
         return E_NETWK
 
