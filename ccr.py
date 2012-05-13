@@ -302,8 +302,9 @@ def disown(package, opener):
 
 def submit(file, category, opener):
     """submit a package to CCR"""
+    catID = "set this with some sort of array"
     data = urllib.urlencode({"pkgsubmit": 1,
-                             "category": category,
+                             "category": catID,
                              "pfile": "@%s" % (file)
                              })
     try: 
@@ -314,6 +315,11 @@ def submit(file, category, opener):
             return response.read()
     except urllib2.HTTPError:
         return E_NETWK
+
+
+def setcategory(package, category, opener):
+    """change/set the category of a package already in CCR"""
+
 
 
 # Other
@@ -329,6 +335,10 @@ def geturl(package):
         return E_NOPKG
     url = CCR_PKG + "?ID=" + ccrid
     return url
+
+
+def getpkgurl(package):
+    """get the url to the source package"""
 
 
 
