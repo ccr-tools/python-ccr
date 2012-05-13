@@ -341,6 +341,14 @@ def getpkgurl(package):
     """get the url to the source package"""
 
 
+def getpkgbuild(package):
+    """get the url to the online PKGBUILD viewer"""
+
+
+def getpkgbuildraw([ackage):
+    """get the actual PKGBUILD"""
+
+
 
 if __name__ == "__main__":
     r = info("snort")
