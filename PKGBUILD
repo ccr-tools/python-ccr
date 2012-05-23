@@ -9,12 +9,10 @@ url='http://github.com/ccr-tools/python-ccr/'
 license=('GPLv2 or any later version')
 depends=('python2')
 makedepends=('python-distribute')
-source=("http://cloud.github.com/ccr-tools/python-ccr/somethingelse/${pkgname}-${pkgver}.tar.gz")
+source=("")
 sha256sums=('a')
 
 package() {
   cd "${pkgname}-${pkgver}"
-  export PYTHONPATH="$PYTHONPATH:${pkgdir}/usr/lib/python2.7/site-packages/"
-  install -dm755 "${pkgdir}/usr/lib/python2.7/site-packages"
-  python setup.py install --prefix="${pkgdir}/usr"
+  python setup.py install --root="${pkgdir}/"
 }
