@@ -343,9 +343,10 @@ def getpkgurl(package):
 
 def getpkgbuild(package):
     """get the url to the online PKGBUILD viewer"""
+    url = "http://chakra-linux.org/ccr/pkgbuild_view.php?p=" + package
+    return url
 
-
-def getpkgbuildraw([ackage):
+def getpkgbuildraw(package):
     """get the actual PKGBUILD"""
 
 
