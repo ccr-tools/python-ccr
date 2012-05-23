@@ -1,8 +1,9 @@
 #!/usr/bin/python2
 """A simple Python lib to access the Chakra Community Repository"""
 
-__all__ = [ "adopt", "disown", "flag", "geturl", "info", "login",
-            "msearch", "notify", "search", "unflag", "unnotify",
+__all__ = [ "adopt", "disown", "flag", "getfileraw", "getpkgbuild", 
+            "getpkgbuildraw", "getpkgurl", "geturl", "info", "login", 
+            "msearch", "notify", "search", "unflag", "unnotify", 
             "unvote", "vote" ]
 __version__ = 0.2
 
@@ -336,19 +337,28 @@ def geturl(package):
     url = CCR_PKG + "?ID=" + ccrid
     return url
 
-
 def getpkgurl(package):
     """get the url to the source package"""
-
+    path = "packages/" + package[:2] + "/" + package + "/"
+    url = CCR_BASE + path + package + ".tar.gz"
+    return url
 
 def getpkgbuild(package):
     """get the url to the online PKGBUILD viewer"""
-    url = "http://chakra-linux.org/ccr/pkgbuild_view.php?p=" + package
+    url = CCR_BASE + "pkgbuild_view.php?p=" + package
     return url
 
 def getpkgbuildraw(package):
-    """get the actual PKGBUILD"""
+    """get the url to the actual PKGBUILD"""
+    path = "packages/" + package[:2] + "/" + package + "/" + package + "/"
+    url = CCR_BASE + path + "PKGBUILD"
+    return url
 
+def getfileraw(package, file):
+    """get the url to an arbitrary file, like a .install"""
+    path = "packages/" + package[:2] + "/" + package + "/" + package + "/"
+    url = CCR_BASE + path + file
+    return url
 
 
 if __name__ == "__main__":
