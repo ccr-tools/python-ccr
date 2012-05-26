@@ -118,13 +118,14 @@ class CCRUserActions(object):
             return E_NOPKG
         try:
             response = self.opener.open(CCR_PKG + "?ID=" + ccrid)
-            print response.read()
             # TODO: value is not reliable (translated)
-            if "class='button' name='do_UnVote' value='UnVote'" in response.read():
+            if "class='button' name='do_UnVote'" in response.read():
+                "works"
                 return E_ALLOK
             else:
                 return E_GENER
         except urllib2.HTTPError:
+            # TODO: Might be better to reraise the exception
             return E_NETWK
 
     def unvote(self, package):
@@ -307,11 +308,15 @@ class CCRUserActions(object):
         try:
             request = urllib2.Request(CCR_SUBMIT, datagen, headers)
             response = urllib2.urlopen(request)
-            if "WHAT GOES HERE?" in response.read():
-                return E_ALLOK
-            else:
-                return response.read()
+            return response
+            # TODO: fix the stuff beneath
+            #if "WHAT GOES HERE?" in response.read():
+                #return E_ALLOK
+            #else:
+                #return response.read()
         except urllib2.HTTPError:
+            # TODO better rereaise the exception
+            # raise
             return E_NETWK
 
     def setcategory(self, package, category):
