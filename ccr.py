@@ -1,5 +1,6 @@
 #!/usr/bin/python2
 """A simple Python lib to access the Chakra Community Repository"""
+from __future__ import print_function
 
 #__all__ = ["adopt", "disown", "flag", "getfileraw", "getpkgbuild",
         #"getpkgbuildraw", "getpkgurl", "geturl", "info", "login",
@@ -7,6 +8,8 @@
         #"unvote", "vote"]
 __version__ = 0.2
 
+
+import sys
 import json
 import contextlib
 import urllib
@@ -85,30 +88,32 @@ def msearch(maintainer):
 
 
 # CCR actions
-class CCRUserActions(object):
+class CCRSession(object):
     """class for all CCR actions """
 
-    def __init__(self, username, password, rememberme='off'):
+    def __init__(self, username, password, rememberme=False):
+        remember_me = 'off' if rememberme else "on"
         data = urllib.urlencode({"user": username,
             "passwd": password,
-            "remember_me": rememberme
+            "remember_me": remember_me
             })
         self.opener = poster.streaminghttp.register_openers()
         self.opener.add_handler(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
-        #opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cjar)) REMOVE
         # do a check if the login did work
         try:
             self.opener.open(CCR_BASE, data)
         except urllib2.HTTPError:
             # Network error occured
             # TODO: some error handling stuff
+            print("A network error occured", file=sys.stderr)
             raise
         checkstr = "packages.php?SeB=m&K=" + username
-        if checkstr in self.opener.open(CCR_BASE).read():
-            pass
-        else:
-            # TODO print an error message
-            raise Exception
+        response = self.opener.open(CCR_BASE).read()
+        if not (checkstr in response):
+            # TODO logging would probably be a better alternative
+            print("There was an error logging in", file=sys.stderr)
+            print("Please check if username and password are correct")
+            raise ValueError(username, password)
 
     def check(self, package):
         """check to see if you have already voted for a package"""
