@@ -84,7 +84,7 @@ def msearch(maintainer):
     try:
         return results.results
     except AttributeError:
-        return results
+        raise ValueError((maintainer, results))
 
 
 # CCR actions
