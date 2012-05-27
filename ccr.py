@@ -92,23 +92,44 @@ class CCRSession(object):
     """class for all CCR actions """
 
     def __init__(self, username, password, rememberme=False):
+        self._cat2number = {
+                "none": 1,
+                "daemons": 2,
+                "devel": 3,
+                "editors": 4,
+                "emulators": 5,
+                "games": 6,
+                "gnome": 7,
+                "i18n": 8,
+                "kde": 9,
+                "lib": 10,
+                "modules": 11,
+                "multimedia": 12,
+                "network": 13,
+                "office": 14,
+                "educational": 15,
+                "system": 16,
+                "x11": 17,
+                "utils": 18,
+                "lib32": 19,
+                }
         remember_me = 'off' if rememberme else "on"
         data = urllib.urlencode({"user": username,
             "passwd": password,
             "remember_me": remember_me
             })
-        self.opener = poster.streaminghttp.register_openers()
-        self.opener.add_handler(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
+        self._opener = poster.streaminghttp.register_openers()
+        self._opener.add_handler(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
         # do a check if the login did work
         try:
-            self.opener.open(CCR_BASE, data)
+            self._opener.open(CCR_BASE, data)
         except urllib2.HTTPError:
             # Network error occured
             # TODO: some error handling stuff
             print("A network error occured", file=sys.stderr)
             raise
         checkstr = "packages.php?SeB=m&K=" + username
-        response = self.opener.open(CCR_BASE).read()
+        response = self._opener.open(CCR_BASE).read()
         if not (checkstr in response):
             # TODO logging would probably be a better alternative
             print("There was an error logging in", file=sys.stderr)
@@ -124,7 +145,7 @@ class CCRSession(object):
             # maybe add error message here?
             raise ValueError(package)
         try:
-            response = self.opener.open(CCR_PKG + "?ID=" + ccrid)
+            response = self._opener.open(CCR_PKG + "?ID=" + ccrid)
             if "class='button' name='do_UnVote'" in response.read():
                 return ((True, ccrid) if return_id else True)
             else:
@@ -148,7 +169,7 @@ class CCRSession(object):
                 "ID": id,
                 "do_UnVote": 1
                 })
-            self.opener.open(CCR_PKG, data)
+            self._opener.open(CCR_PKG, data)
             # check if the package is unvoted now
             return not self.check(package)
         except ValueError:
@@ -173,7 +194,7 @@ class CCRSession(object):
                 "ID": id,
                 "do_Vote": 1
                 })
-            self.opener.open(CCR_PKG, data)
+            self._opener.open(CCR_PKG, data)
             # check if the package is unvoted now
             return self.check(package)
         except ValueError:
@@ -194,7 +215,7 @@ class CCRSession(object):
             "do_Flag": 1
             })
         try:
-            self.opener.open(CCR_PKG, data)
+            self._opener.open(CCR_PKG, data)
             return False if (info(package).OutOfDate == 0) else True
         except urllib2.HTTPError:
             # TODO: some error message
@@ -211,7 +232,7 @@ class CCRSession(object):
             "do_UnFlag": 1
             })
         try:
-            self.opener.open(CCR_PKG, data)
+            self._opener.open(CCR_PKG, data)
             return True if (info(package).OutOfDate == 0) else False
         except urllib2.HTTPError:
             # TODO: some error message
@@ -225,10 +246,11 @@ class CCRSession(object):
             raise ValueError(package)
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
-            "do_Delete": 1
+            "do_Delete": 1,
+            "confirm_Delete": 0
             })
         try:
-            response = self.opener.open(CCR_PKG, data)
+            response = self._opener.open(CCR_PKG, data)
             return response.read()
         except urllib2.HTTPError:
             raise
@@ -244,7 +266,7 @@ class CCRSession(object):
             "do_Notify": 1
             })
         try:
-            response = self.opener.open(CCR_PKG, data)
+            response = self._opener.open(CCR_PKG, data)
             if "class='button' name='do_UnNotify' value=" in response.read():
                 return E_ALLOK
             else:
@@ -263,7 +285,7 @@ class CCRSession(object):
             "do_UnNotify": 1
             })
         try:
-            response = self.opener.open(CCR_PKG, data)
+            response = self._opener.open(CCR_PKG, data)
             if "class='button' name='do_Notify' value=" in response.read():
                 return E_ALLOK
             else:
@@ -282,7 +304,7 @@ class CCRSession(object):
             "do_Adopt": 1
             })
         try:
-            response = self.opener.open(CCR_PKG, data)
+            response = self._opener.open(CCR_PKG, data)
             if "class='button' name='do_Disown' value=" in response.read():
                 return E_ALLOK
             else:
@@ -301,7 +323,7 @@ class CCRSession(object):
             "do_Disown": 1
             })
         try:
-            response = self.opener.open(CCR_PKG, data)
+            response = self._opener.open(CCR_PKG, data)
             if "class='button' name='do_Adopt' value=" in response.read():
                 return E_ALLOK
             else:
