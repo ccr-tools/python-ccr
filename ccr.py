@@ -66,7 +66,7 @@ def search(keywords):
     try:
         return results.results
     except AttributeError:
-        return results
+        raise AttributeError(results)
 
 
 def info(package):
@@ -75,7 +75,7 @@ def info(package):
     try:
         return results.results
     except AttributeError:
-        return results
+        raise ValueError((package, results))
 
 
 def msearch(maintainer):
@@ -115,116 +115,123 @@ class CCRSession(object):
             print("Please check if username and password are correct")
             raise ValueError(username, password)
 
-    def check(self, package):
+    def check(self, package, return_id=False):
         """check to see if you have already voted for a package"""
         try:
             ccrid = info(package).ID
-        except AttributeError:
-            return E_NOPKG
+        except ValueError:
+            # package does not exist
+            # maybe add error message here?
+            raise ValueError(package)
         try:
             response = self.opener.open(CCR_PKG + "?ID=" + ccrid)
-            # TODO: value is not reliable (translated)
             if "class='button' name='do_UnVote'" in response.read():
-                "works"
-                return E_ALLOK
+                return ((True, ccrid) if return_id else True)
             else:
-                return E_GENER
+                return ((False, ccrid) if return_id else False)
         except urllib2.HTTPError:
-            # TODO: Might be better to reraise the exception
-            return E_NETWK
+            print("A network error occured!", file=sys.stderr)
+            raise
 
     def unvote(self, package):
-        """unvote for a package on CCR"""
+        """unvote for a package on CCR
+           returns False if the package didn't have a vote
+           returns True on success
+           raises a HTTPError if a network error occurs or a ValueError if the
+           package doesn't exist
+        """
         try:
-            ccrid = info(package).ID
-        except AttributeError:
-            return E_NOPKG
-        data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
-            "ID": ccrid,
-            "do_UnVote": 1
-            })
-        try:
-            response = self.opener.open(CCR_PKG, data)
-            if self.check(package) == E_GENER:
-                return E_ALLOK
-            else:
-                return E_GENER
+            voted, id = self.check(package, True)
+            if not voted:
+                return True  # package didn't have a vote
+            data = urllib.urlencode({"IDs[%s]" % (id): 1,
+                "ID": id,
+                "do_UnVote": 1
+                })
+            self.opener.open(CCR_PKG, data)
+            # check if the package is unvoted now
+            return not self.check(package)
+        except ValueError:
+            print("Package doesn't exist!")
+            raise
         except urllib2.HTTPError:
-            return E_NETWK
+            # FIXME some error handling (logging?)
+            raise
 
     def vote(self, package):
-        """vote for a package in the CCR"""
+        """vote for a package on CCR
+           returns False if  already voted
+           returns True on success
+           raises a HTTPError if a network error occurs or a ValueError if the
+           package doesn't exist
+        """
         try:
-            ccrid = info(package).ID
-        except AttributeError:
-            return E_NOPKG
-        # FIXME: the IDs[%s] thing below is bad, there has to be a better way
-        data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
-            "ID": ccrid,
-            "do_Vote": 1
-            })
-        try:
-            response = self.opener.open(CCR_PKG, data)
+            voted, id = self.check(package, True)
+            if voted:
+                return True  # package  is already voted
+            data = urllib.urlencode({"IDs[%s]" % (id): 1,
+                "ID": id,
+                "do_Vote": 1
+                })
+            self.opener.open(CCR_PKG, data)
+            # check if the package is unvoted now
             return self.check(package)
+        except ValueError:
+            print("Package doesn't exist!")
+            raise
         except urllib2.HTTPError:
-            return E_NETWK
+            # TODOsome error handling (logging?)
+            raise
 
     def flag(self, package):
         """flag a CCR package as out of date"""
         try:
             ccrid = info(package).ID
-        except AttributeError:
-            return E_NOPKG
+        except (ValueError, AttributeError):
+            raise ValueError(package)
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
             "do_Flag": 1
             })
         try:
-            response = self.opener.open(CCR_PKG, data)
-            if "class='button' name='do_UnFlag' value=" in response.read():
-                return E_ALLOK
-            else:
-                return E_GENER
+            self.opener.open(CCR_PKG, data)
+            return False if (info(package).OutOfDate == 0) else True
         except urllib2.HTTPError:
-            return E_NETWK
+            # TODO: some error message
+            raise
 
     def unflag(self, package):
         """unflag a CCR package as out of date"""
         try:
             ccrid = info(package).ID
-        except AttributeError:
-            return E_NOPKG
+        except (ValueError, AttributeError):
+            raise ValueError(package)
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
             "do_UnFlag": 1
             })
         try:
-            response = self.opener.open(CCR_PKG, data)
-            if "class='button' name='do_Flag' value=" in response.read():
-                return E_ALLOK
-            else:
-                return E_GENER
+            self.opener.open(CCR_PKG, data)
+            return True if (info(package).OutOfDate == 0) else False
         except urllib2.HTTPError:
-            return E_NETWK
+            # TODO: some error message
+            raise
 
     def delete(self, package):
         """delete a package from CCR"""
         try:
             ccrid = info(package).ID
-        except AttributeError:
-            return E_NOPKG
+        except (ValueError, AttributeError):
+            raise ValueError(package)
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
             "do_Delete": 1
             })
         try:
             response = self.opener.open(CCR_PKG, data)
-            if "WHAT GOES HERE?" in response.read():
-                return E_ALLOK
-            else:
-                return E_GENER
+            return response.read()
         except urllib2.HTTPError:
-            return E_NETWK
+            raise
 
     def notify(self, package):
         """set the notify flag on a package"""
