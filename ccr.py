@@ -86,6 +86,9 @@ def msearch(maintainer):
     except AttributeError:
         raise ValueError((maintainer, results))
 
+def orphan():
+    """search for orphaned packages - returns results as a list"""
+    return msearch("0")
 
 # CCR actions
 class CCRSession(object):
