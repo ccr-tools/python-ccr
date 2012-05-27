@@ -41,13 +41,13 @@ MSEARCH = "msearch"
 
 
 # Custom error codes
-E_ALLOK = 0
-E_GENER = 1
-E_NETWK = 2
-E_NOPKG = 3
-E_NOFIL = 4
-E_NOUSR = 5
-E_LOGIN = 6
+#E_ALLOK = 0
+#E_GENER = 1
+#E_NETWK = 2
+#E_NOPKG = 3
+#E_NOFIL = 4
+#E_NOUSR = 5
+#E_LOGIN = 6
 
 
 # CCR searching and info
@@ -57,7 +57,7 @@ def get_ccr_json(method, arg):
         with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
             return json.loads(text.read(), object_hook=Struct)
     except urllib2.HTTPError:
-        return E_NETWK
+        raise
 
 
 def search(keywords):
@@ -250,8 +250,9 @@ class CCRSession(object):
             "confirm_Delete": 0
             })
         try:
-            response = self._opener.open(CCR_PKG, data)
-            return response.read()
+            self._opener.open(CCR_PKG, data)
+            # TODO
+            return "TODO"
         except urllib2.HTTPError:
             raise
 
@@ -259,8 +260,8 @@ class CCRSession(object):
         """set the notify flag on a package"""
         try:
             ccrid = info(package).ID
-        except AttributeError:
-            return E_NOPKG
+        except (ValueError, AttributeError):
+            raise ValueError(package)
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
             "do_Notify": 1
@@ -268,18 +269,18 @@ class CCRSession(object):
         try:
             response = self._opener.open(CCR_PKG, data)
             if "class='button' name='do_UnNotify' value=" in response.read():
-                return E_ALLOK
+                return True
             else:
-                return E_GENER
+                return False
         except urllib2.HTTPError:
-            return E_NETWK
+            raise
 
     def unnotify(self, package):
         """unset the notify flag on a package"""
         try:
             ccrid = info(package).ID
-        except AttributeError:
-            return E_NOPKG
+        except (ValueError, AttributeError):
+            raise ValueError(package)
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
             "do_UnNotify": 1
@@ -287,18 +288,22 @@ class CCRSession(object):
         try:
             response = self._opener.open(CCR_PKG, data)
             if "class='button' name='do_Notify' value=" in response.read():
-                return E_ALLOK
+                return True
             else:
-                return E_GENER
+                return False
         except urllib2.HTTPError:
-            return E_NETWK
+            raise
 
     def adopt(self, package):
         """adopt an orphaned CCR package"""
         try:
-            ccrid = info(package).ID
-        except AttributeError:
-            return E_NOPKG
+            package_info = info(package)
+            ccrid = package_info.ID
+            # TODO don't only warn but do somethnig
+            if package_info.Maintainer != u'[PKGBUILD error: non-UTF8 character]':
+                print("Warning: Adopting maintained package!")
+        except (ValueError, AttributeError):
+            raise ValueError(package)
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
             "do_Adopt": 1
@@ -306,18 +311,18 @@ class CCRSession(object):
         try:
             response = self._opener.open(CCR_PKG, data)
             if "class='button' name='do_Disown' value=" in response.read():
-                return E_ALLOK
+                return True
             else:
-                return E_GENER
+                return False
         except urllib2.HTTPError:
-            return E_NETWK
+            raise
 
     def disown(self, package):
         """disown a CCR package"""
         try:
             ccrid = info(package).ID
-        except AttributeError:
-            return E_NOPKG
+        except (ValueError, AttributeError):
+            raise ValueError(package)
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
             "do_Disown": 1
@@ -325,17 +330,17 @@ class CCRSession(object):
         try:
             response = self._opener.open(CCR_PKG, data)
             if "class='button' name='do_Adopt' value=" in response.read():
-                return E_ALLOK
+                return True
             else:
-                return E_GENER
+                return False
         except urllib2.HTTPError:
-            return E_NETWK
+            raise
 
     def submit(self, f, category):
         """submit a package to CCR"""
         #catID = "set this with some sort of array"
         params = {"pkgsubmit": 1,
-                "category": category,
+                "category": self._cat2number[category],
                 "pfile": open(f, "rb")
                 }
         datagen, headers = poster.encode.multipart_encode(params)
@@ -350,8 +355,7 @@ class CCRSession(object):
                 #return response.read()
         except urllib2.HTTPError:
             # TODO better rereaise the exception
-            # raise
-            return E_NETWK
+            raise
 
     def setcategory(self, package, category):
         """change/set the category of a package already in CCR"""
@@ -367,7 +371,7 @@ def geturl(package):
     try:
         ccrid = info(package).ID
     except AttributeError:
-        return E_NOPKG
+        raise ValueError(package)
     url = CCR_PKG + "?ID=" + ccrid
     return url
 
