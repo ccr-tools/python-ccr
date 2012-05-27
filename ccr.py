@@ -2,10 +2,10 @@
 """A simple Python lib to access the Chakra Community Repository"""
 from __future__ import print_function
 
-#__all__ = ["adopt", "disown", "flag", "getfileraw", "getpkgbuild",
-        #"getpkgbuildraw", "getpkgurl", "geturl", "info", "login",
-        #"msearch", "notify", "search", "unflag", "unnotify",
-        #"unvote", "vote"]
+__all__ = ["getfileraw", "getpkgbuild",
+        "getpkgbuildraw", "getpkgurl", "geturl", "info",
+        "msearch", "search",
+        ]
 __version__ = 0.2
 
 
@@ -86,9 +86,11 @@ def msearch(maintainer):
     except AttributeError:
         raise ValueError((maintainer, results))
 
+
 def orphan():
     """search for orphaned packages - returns results as a list"""
     return msearch("0")
+
 
 # CCR actions
 class CCRSession(object):
