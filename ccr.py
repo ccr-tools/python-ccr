@@ -141,6 +141,12 @@ class CCRSession(object):
             print("Please check if username and password are correct")
             raise ValueError(username, password)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, tb):
+        self._opener.close()
+
     def check(self, package, return_id=False):
         """check to see if you have already voted for a package"""
         try:
