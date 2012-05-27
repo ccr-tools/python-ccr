@@ -16,6 +16,9 @@ import urllib
 import urllib2
 import cookielib
 import poster
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format='>> %(levelname)s - %(message)s')
 
 
 class Struct(dict):
@@ -131,14 +134,14 @@ class CCRSession(object):
         except urllib2.HTTPError:
             # Network error occured
             # TODO: some error handling stuff
-            print("A network error occured", file=sys.stderr)
+            logging.debug("A network error occured")
             raise
         checkstr = "packages.php?SeB=m&K=" + username
         response = self._opener.open(CCR_BASE).read()
         if not (checkstr in response):
             # TODO logging would probably be a better alternative
-            print("There was an error logging in", file=sys.stderr)
-            print("Please check if username and password are correct")
+            logging.debug("There was an error logging in")
+            logging.debug("Please check if username and password are correct")
             raise ValueError(username, password)
 
     def __enter__(self):
@@ -151,7 +154,7 @@ class CCRSession(object):
         """check to see if you have already voted for a package"""
         try:
             ccrid = info(package).ID
-        except ValueError:
+        except (ValueError, AttributeError):
             # package does not exist
             # maybe add error message here?
             raise ValueError(package)
@@ -162,7 +165,7 @@ class CCRSession(object):
             else:
                 return ((False, ccrid) if return_id else False)
         except urllib2.HTTPError:
-            print("A network error occured!", file=sys.stderr)
+            logging.error("A network error occured!", file=sys.stderr)
             raise
 
     def unvote(self, package):
@@ -184,7 +187,7 @@ class CCRSession(object):
             # check if the package is unvoted now
             return not self.check(package)
         except ValueError:
-            print("Package doesn't exist!")
+            logging.warn("Package doesn't exist!")
             raise
         except urllib2.HTTPError:
             # FIXME some error handling (logging?)
@@ -209,7 +212,7 @@ class CCRSession(object):
             # check if the package is unvoted now
             return self.check(package)
         except ValueError:
-            print("Package doesn't exist!")
+            logging.warn("Package doesn't exist!")
             raise
         except urllib2.HTTPError:
             # TODOsome error handling (logging?)
@@ -312,7 +315,7 @@ class CCRSession(object):
             ccrid = package_info.ID
             # TODO don't only warn but do somethnig
             if package_info.Maintainer != u'[PKGBUILD error: non-UTF8 character]':
-                print("Warning: Adopting maintained package!")
+                logging.warn("Warning: Adopting maintained package!")
         except (ValueError, AttributeError):
             raise ValueError(package)
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
