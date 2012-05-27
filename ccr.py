@@ -88,12 +88,7 @@ def msearch(maintainer):
 
 def orphan():
     """search for orphaned packages - returns results as a list"""
-    results = get_ccr_json(MSEARCH, "0")
-    try:
-        return results.results
-    except AttributeError:
-        return results
-
+    return msearch("0")
 
 # CCR actions
 class CCRSession(object):
