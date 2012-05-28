@@ -250,7 +250,10 @@ class CCRSession(object):
             raise
 
     def delete(self, package):
-        """delete a package from CCR"""
+        """delete a package from CCR
+           Raises ValueError if the package does not exist, and 
+           urllib2.HTTPError if there are network prolems.
+        """
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
@@ -261,9 +264,13 @@ class CCRSession(object):
             "confirm_Delete": 0
             })
         try:
-            self._opener.open(CCR_PKG, data)
-            # TODO
-            return "TODO"
+            response = self._opener.open(CCR_PKG, data).read()
+            # FIXME: this retunrs True if the package was deleted, as well as
+            # when a non-privileged user tries to deleted a package. 
+            if "href='packages.php?O=2275&amp;PP=25&amp;SO=a'" in response:
+                return True
+            else:
+                return False
         except urllib2.HTTPError:
             raise
 
@@ -278,11 +285,12 @@ class CCRSession(object):
             "do_Notify": 1
             })
         try:
-            response = self._opener.open(CCR_PKG, data)
-            if "class='button' name='do_UnNotify' value=" in response.read():
+            response = self._opener.open(CCR_PKG, data).read()
+            if "<option value='do_UnNotify'" in response:
                 return True
             else:
-                return False
+                return response
+                #return False
         except urllib2.HTTPError:
             raise
 
@@ -297,8 +305,8 @@ class CCRSession(object):
             "do_UnNotify": 1
             })
         try:
-            response = self._opener.open(CCR_PKG, data)
-            if "class='button' name='do_Notify' value=" in response.read():
+            response = self._opener.open(CCR_PKG, data).read()
+            if "<option value='do_Notify'" in response:
                 return True
             else:
                 return False
@@ -320,8 +328,11 @@ class CCRSession(object):
             "do_Adopt": 1
             })
         try:
-            response = self._opener.open(CCR_PKG, data)
-            if "class='button' name='do_Disown' value=" in response.read():
+            response = self._opener.open(CCR_PKG, data).read()
+            # FIXME: This returns True if the pacage was adopted, and True
+            # if a non-privileged user attempted to adopt a non-orphaned
+            # package. The delete() workaround does not work here.
+            if "<option value='do_Disown'" in response:
                 return True
             else:
                 return False
@@ -339,8 +350,10 @@ class CCRSession(object):
             "do_Disown": 1
             })
         try:
-            response = self._opener.open(CCR_PKG, data)
-            if "class='button' name='do_Adopt' value=" in response.read():
+            response = self._opener.open(CCR_PKG, data).read()
+            if "href='packages.php?O=2275&amp;PP=25&amp;SO=a'" in response:
+                return False
+            elif "<option value='do_Adopt'" in response:
                 return True
             else:
                 return False
@@ -348,7 +361,11 @@ class CCRSession(object):
             raise
 
     def submit(self, f, category):
-        """submit a package to CCR"""
+        """submit a package to CCR
+           Raises KeyError on bad category, IOError [Errno 2] if 'f'
+           does not exist, and urllib2.HTTPError if there are network 
+           problems. Returns True if successful, and False if not.
+        """
         params = {"pkgsubmit": 1,
                 "category": self._cat2number[category],
                 "pfile": open(f, "rb")
@@ -356,19 +373,21 @@ class CCRSession(object):
         datagen, headers = poster.encode.multipart_encode(params)
         try:
             request = urllib2.Request(CCR_SUBMIT, datagen, headers)
-            response = urllib2.urlopen(request)
-            return response
-            # TODO: fix the stuff beneath
-            #if "WHAT GOES HERE?" in response.read():
-                #return E_ALLOK
-            #else:
-                #return response.read()
+            response = urllib2.urlopen(request).read()
+            if "pkgbuild_view.php?p=" in response:
+                return True
+            else:
+                return False
         except urllib2.HTTPError:
             # TODO better rereaise the exception
             raise
 
     def setcategory(self, package, category):
-        """change/set the category of a package already in the CCR"""
+        """change/set the category of a package already in the CCR
+           Raises KeyError for an invalid category, or urllib2.HTTPError
+           if there are network problems. Returns True if successful, and
+           False if not.
+        """
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
@@ -378,12 +397,12 @@ class CCRSession(object):
             })
         try:
             pkgurl = CCR_PKG + "?ID=" + ccrid
-            response = self._opener.open(pkgurl, data)
-            checkstr = 'selected="selected">' + category + '</option>'
-            if checkstr in response.read():
+            response = self._opener.open(pkgurl, data).read()
+            checkstr = "selected='selected'>" + category + "</option>"
+            if checkstr in response:
                 return True
             else:
-                return False
+                return response #return False
         except urllib2.HTTPError:
             raise
 
