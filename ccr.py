@@ -164,15 +164,11 @@ class CCRSession(object):
             # package does not exist
             # maybe add error message here?
             raise ValueError(package)
-        try:
-            response = self._opener.open(CCR_PKG + "?ID=" + ccrid)
-            if "class='button' name='do_UnVote'" in response.read():
-                return ((True, ccrid) if return_id else True)
-            else:
-                return ((False, ccrid) if return_id else False)
-        except urllib2.HTTPError:
-            logging.error("A network error occured!", file=sys.stderr)
-            raise
+        response = self._opener.open(CCR_PKG + "?ID=" + ccrid)
+        if "class='button' name='do_UnVote'" in response.read():
+            return ((True, ccrid) if return_id else True)
+        else:
+            return ((False, ccrid) if return_id else False)
 
     def unvote(self, package):
         """unvote for a package on CCR
@@ -194,9 +190,6 @@ class CCRSession(object):
             return not self.check_vote(package)
         except ValueError:
             logging.warn("Package doesn't exist!")
-            raise
-        except urllib2.HTTPError:
-            # FIXME some error handling (logging?)
             raise
 
     def vote(self, package):
@@ -220,9 +213,6 @@ class CCRSession(object):
         except ValueError:
             logging.warn("Package doesn't exist!")
             raise
-        except urllib2.HTTPError:
-            # TODOsome error handling (logging?)
-            raise
 
     def flag(self, package):
         """flag a CCR package as out of date"""
@@ -237,9 +227,6 @@ class CCRSession(object):
         try:
             self._opener.open(CCR_PKG, data)
             return False if (info(package).OutOfDate == 0) else True
-        except urllib2.HTTPError:
-            # TODO: some error message
-            raise
 
     def unflag(self, package):
         """unflag a CCR package as out of date"""
@@ -251,12 +238,8 @@ class CCRSession(object):
             "ID": ccrid,
             "do_UnFlag": 1
             })
-        try:
-            self._opener.open(CCR_PKG, data)
-            return True if (info(package).OutOfDate == 0) else False
-        except urllib2.HTTPError:
-            # TODO: some error message
-            raise
+        self._opener.open(CCR_PKG, data)
+        return True if (info(package).OutOfDate == 0) else False
 
     def delete(self, package):
         """delete a package from CCR"""
@@ -269,12 +252,9 @@ class CCRSession(object):
             "do_Delete": 1,
             "confirm_Delete": 0
             })
-        try:
-            self._opener.open(CCR_PKG, data)
-            # TODO
-            return "TODO"
-        except urllib2.HTTPError:
-            raise
+        self._opener.open(CCR_PKG, data)
+        # TODO
+        return "TODO"
 
     def notify(self, package):
         """set the notify flag on a package"""
@@ -286,14 +266,11 @@ class CCRSession(object):
             "ID": ccrid,
             "do_Notify": 1
             })
-        try:
-            response = self._opener.open(CCR_PKG, data)
-            if "class='button' name='do_UnNotify' value=" in response.read():
-                return True
-            else:
-                return False
-        except urllib2.HTTPError:
-            raise
+        response = self._opener.open(CCR_PKG, data)
+        if "class='button' name='do_UnNotify' value=" in response.read():
+            return True
+        else:
+            return False
 
     def unnotify(self, package):
         """unset the notify flag on a package"""
@@ -305,14 +282,11 @@ class CCRSession(object):
             "ID": ccrid,
             "do_UnNotify": 1
             })
-        try:
-            response = self._opener.open(CCR_PKG, data)
-            if "class='button' name='do_Notify' value=" in response.read():
-                return True
-            else:
-                return False
-        except urllib2.HTTPError:
-            raise
+        response = self._opener.open(CCR_PKG, data)
+        if "class='button' name='do_Notify' value=" in response.read():
+            return True
+        else:
+            return False
 
     def adopt(self, package):
         """adopt an orphaned CCR package"""
@@ -328,14 +302,11 @@ class CCRSession(object):
             "ID": ccrid,
             "do_Adopt": 1
             })
-        try:
-            response = self._opener.open(CCR_PKG, data)
-            if "class='button' name='do_Disown' value=" in response.read():
-                return True
-            else:
-                return False
-        except urllib2.HTTPError:
-            raise
+        response = self._opener.open(CCR_PKG, data)
+        if "class='button' name='do_Disown' value=" in response.read():
+            return True
+        else:
+            return False
 
     def disown(self, package):
         """disown a CCR package"""
@@ -347,14 +318,11 @@ class CCRSession(object):
             "ID": ccrid,
             "do_Disown": 1
             })
-        try:
-            response = self._opener.open(CCR_PKG, data)
-            if "class='button' name='do_Adopt' value=" in response.read():
-                return True
-            else:
-                return False
-        except urllib2.HTTPError:
-            raise
+        response = self._opener.open(CCR_PKG, data)
+        if "class='button' name='do_Adopt' value=" in response.read():
+            return True
+        else:
+            return False
 
     def submit(self, f, category):
         """submit a package to CCR"""
@@ -364,15 +332,11 @@ class CCRSession(object):
                 "pfile": open(f, "rb")
                 }
         datagen, headers = poster.encode.multipart_encode(params)
-        try:
-            request = urllib2.Request(CCR_SUBMIT, datagen, headers)
-            response = urllib2.urlopen(request)
-            error_message = re.search(error, response.read())
-            if error_message:
-                raise InvalidPackage(error_message.groupdict()["message"])
-        except urllib2.HTTPError:
-            # TODO better rereaise the exception
-            raise
+        request = urllib2.Request(CCR_SUBMIT, datagen, headers)
+        response = urllib2.urlopen(request)
+        error_message = re.search(error, response.read())
+        if error_message:
+            raise InvalidPackage(error_message.groupdict()["message"])
 
     def setcategory(self, package, category):
         """change/set the category of a package already in CCR"""
