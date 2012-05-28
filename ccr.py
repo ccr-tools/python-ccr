@@ -17,8 +17,13 @@ import urllib2
 import cookielib
 import poster
 import logging
+import re
 
 logging.basicConfig(level=logging.DEBUG, format='>> %(levelname)s - %(message)s')
+
+
+class InvalidPackage(TypeError):
+    """Invalid package or wrong file type"""
 
 
 class Struct(dict):
@@ -150,11 +155,12 @@ class CCRSession(object):
     def __exit__(self, type, value, tb):
         self._opener.close()
 
-    def check(self, package, return_id=False):
+    def check_vote(self, package, return_id=False):
         """check to see if you have already voted for a package"""
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
+            logging.debug("{} does not exist".format(package))
             # package does not exist
             # maybe add error message here?
             raise ValueError(package)
@@ -176,7 +182,7 @@ class CCRSession(object):
            package doesn't exist
         """
         try:
-            voted, id = self.check(package, True)
+            voted, id = self.check_vote(package, True)
             if not voted:
                 return True  # package didn't have a vote
             data = urllib.urlencode({"IDs[%s]" % (id): 1,
@@ -185,7 +191,7 @@ class CCRSession(object):
                 })
             self._opener.open(CCR_PKG, data)
             # check if the package is unvoted now
-            return not self.check(package)
+            return not self.check_vote(package)
         except ValueError:
             logging.warn("Package doesn't exist!")
             raise
@@ -201,7 +207,7 @@ class CCRSession(object):
            package doesn't exist
         """
         try:
-            voted, id = self.check(package, True)
+            voted, id = self.check_vote(package, True)
             if voted:
                 return True  # package  is already voted
             data = urllib.urlencode({"IDs[%s]" % (id): 1,
@@ -210,7 +216,7 @@ class CCRSession(object):
                 })
             self._opener.open(CCR_PKG, data)
             # check if the package is unvoted now
-            return self.check(package)
+            return self.check_vote(package)
         except ValueError:
             logging.warn("Package doesn't exist!")
             raise
@@ -352,7 +358,7 @@ class CCRSession(object):
 
     def submit(self, f, category):
         """submit a package to CCR"""
-        #catID = "set this with some sort of array"
+        error = re.compile(r"<span class='error'>(?P<message>.*)</span>")
         params = {"pkgsubmit": 1,
                 "category": self._cat2number[category],
                 "pfile": open(f, "rb")
@@ -361,12 +367,9 @@ class CCRSession(object):
         try:
             request = urllib2.Request(CCR_SUBMIT, datagen, headers)
             response = urllib2.urlopen(request)
-            return response
-            # TODO: fix the stuff beneath
-            #if "WHAT GOES HERE?" in response.read():
-                #return E_ALLOK
-            #else:
-                #return response.read()
+            error_message = re.search(error, response.read())
+            if error_message:
+                raise InvalidPackage(error_message.groupdict()["message"])
         except urllib2.HTTPError:
             # TODO better rereaise the exception
             raise
