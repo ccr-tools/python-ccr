@@ -52,7 +52,7 @@ MSEARCH = "msearch"
 
 # CCR searching and info
 def get_ccr_json(method, arg):
-    """returns the parsed json"""
+    """returns the parsed json - for internal use only"""
     try:
         with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
             return json.loads(text.read(), object_hook=Struct)
@@ -169,7 +169,7 @@ class CCRSession(object):
         """unvote for a package on CCR
            returns False if the package didn't have a vote
            returns True on success
-           raises a HTTPError if a network error occurs or a ValueError if the
+           raises an HTTPError if a network error occurs or a ValueError if the
            package doesn't exist
         """
         try:
@@ -212,7 +212,7 @@ class CCRSession(object):
             print("Package doesn't exist!")
             raise
         except urllib2.HTTPError:
-            # TODOsome error handling (logging?)
+            # TODO: some error handling (logging?)
             raise
 
     def flag(self, package):
@@ -349,7 +349,6 @@ class CCRSession(object):
 
     def submit(self, f, category):
         """submit a package to CCR"""
-        #catID = "set this with some sort of array"
         params = {"pkgsubmit": 1,
                 "category": self._cat2number[category],
                 "pfile": open(f, "rb")
@@ -369,7 +368,24 @@ class CCRSession(object):
             raise
 
     def setcategory(self, package, category):
-        """change/set the category of a package already in CCR"""
+        """change/set the category of a package already in the CCR"""
+        try:
+            ccrid = info(package).ID
+        except (ValueError, AttributeError):
+            raise ValueError(package)
+        data = urllib.urlencode({"action": "do_ChangeCategory",
+            "category_id": self._cat2number[category]
+            })
+        try:
+            pkgurl = CCR_PKG + "?ID=" + ccrid
+            response = self._opener.open(pkgurl, data)
+            checkstr = 'selected="selected">' + category + '</option>'
+            if checkstr in response.read():
+                return True
+            else:
+                return False
+        except urllib2.HTTPError:
+            raise
 
 
 # Other
@@ -408,7 +424,7 @@ def getpkgbuildraw(package):
 
 
 def getfileraw(package, f):
-    """get the url to an arbitrary f, like a .install"""
+    """get the url to an arbitrary file f, like a .install"""
     path = "packages/" + package[:2] + "/" + package + "/" + package + "/"
     url = CCR_BASE + path + f
     return url
