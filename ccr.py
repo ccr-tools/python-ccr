@@ -9,7 +9,6 @@ __all__ = ["getfileraw", "getpkgbuild",
 __version__ = 0.2
 
 
-import sys
 import json
 import contextlib
 import urllib
@@ -60,7 +59,7 @@ MSEARCH = "msearch"
 
 # CCR searching and info
 def get_ccr_json(method, arg):
-    """returns the parsed json"""
+    """returns the parsed json - for internal use only"""
     try:
         with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
             return json.loads(text.read(), object_hook=Struct)
@@ -174,8 +173,7 @@ class CCRSession(object):
         """unvote for a package on CCR
            returns False if the package didn't have a vote
            returns True on success
-           raises a HTTPError if a network error occurs or a ValueError if the
-           package doesn't exist
+           raises an ValueError if the package doesn't exist
         """
         try:
             voted, id = self.check_vote(package, True)
@@ -196,8 +194,7 @@ class CCRSession(object):
         """vote for a package on CCR
            returns False if  already voted
            returns True on success
-           raises a HTTPError if a network error occurs or a ValueError if the
-           package doesn't exist
+           raises a ValueError if the package doesn't exist
         """
         try:
             voted, id = self.check_vote(package, True)
@@ -224,9 +221,8 @@ class CCRSession(object):
             "ID": ccrid,
             "do_Flag": 1
             })
-        try:
-            self._opener.open(CCR_PKG, data)
-            return False if (info(package).OutOfDate == 0) else True
+        self._opener.open(CCR_PKG, data)
+        return False if (info(package).OutOfDate == 0) else True
 
     def unflag(self, package):
         """unflag a CCR package as out of date"""
@@ -339,7 +335,24 @@ class CCRSession(object):
             raise InvalidPackage(error_message.groupdict()["message"])
 
     def setcategory(self, package, category):
-        """change/set the category of a package already in CCR"""
+        """change/set the category of a package already in the CCR"""
+        try:
+            ccrid = info(package).ID
+        except (ValueError, AttributeError):
+            raise ValueError(package)
+        data = urllib.urlencode({"action": "do_ChangeCategory",
+            "category_id": self._cat2number[category]
+            })
+        try:
+            pkgurl = CCR_PKG + "?ID=" + ccrid
+            response = self._opener.open(pkgurl, data)
+            checkstr = 'selected="selected">' + category + '</option>'
+            if checkstr in response.read():
+                return True
+            else:
+                return False
+        except urllib2.HTTPError:
+            raise
 
 
 # Other
@@ -378,12 +391,23 @@ def getpkgbuildraw(package):
 
 
 def getfileraw(package, f):
-    """get the url to an arbitrary f, like a .install"""
+    """get the url to an arbitrary file f, like a .install"""
     path = "packages/" + package[:2] + "/" + package + "/" + package + "/"
     url = CCR_BASE + path + f
     return url
 
 
+if __name__ == "__main__":
+    r = info("snort")
+    print("Name           : %s" % r.Name)
+    print("Version        : %s" % r.Version)
+    print("URL            : %s" % r.URL)
+    print("License        : %s" % r.License)
+    print("Category       : %s" % r.Category)
+    print("Maintainer     : %s" % r.Maintainer)
+    print("Description    : %s" % r.Description)
+    print("OutOfDate      : %s" % r.OutOfDate)
+    print("Votes          : %s" % r.NumVotes)
 if __name__ == "__main__":
     r = info("snort")
     print("Name           : %s" % r.Name)
