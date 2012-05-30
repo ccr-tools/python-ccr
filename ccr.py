@@ -58,7 +58,7 @@ MSEARCH = "msearch"
 
 
 # CCR searching and info
-def get_ccr_json(method, arg):
+def _get_ccr_json(method, arg):
     """returns the parsed json - for internal use only"""
     try:
         with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
@@ -69,7 +69,7 @@ def get_ccr_json(method, arg):
 
 def search(keywords):
     """search for some keywords - returns results as a list"""
-    results = get_ccr_json(SEARCH, keywords)
+    results = _get_ccr_json(SEARCH, keywords)
     try:
         return results.results
     except AttributeError:
@@ -78,7 +78,7 @@ def search(keywords):
 
 def info(package):
     """get information for a specific package - returns results as a list"""
-    results = get_ccr_json(INFO, package)
+    results = _get_ccr_json(INFO, package)
     try:
         return results.results
     except AttributeError:
@@ -87,7 +87,7 @@ def info(package):
 
 def msearch(maintainer):
     """search for packages owned by 'maintainer' - returns results as a list"""
-    results = get_ccr_json(MSEARCH, maintainer)
+    results = _get_ccr_json(MSEARCH, maintainer)
     try:
         return results.results
     except AttributeError:
@@ -125,6 +125,7 @@ class CCRSession(object):
                 "utils": 18,
                 "lib32": 19,
                 }
+        self.username = username
         remember_me = 'off' if rememberme else "on"
         data = urllib.urlencode({"user": username,
             "passwd": password,
@@ -143,7 +144,6 @@ class CCRSession(object):
         checkstr = "packages.php?SeB=m&K=" + username
         response = self._opener.open(CCR_BASE).read()
         if not (checkstr in response):
-            # TODO logging would probably be a better alternative
             logging.debug("There was an error logging in")
             logging.debug("Please check if username and password are correct")
             raise ValueError(username, password)
@@ -239,8 +239,7 @@ class CCRSession(object):
 
     def delete(self, package):
         """delete a package from CCR
-           Raises ValueError if the package does not exist, and
-           urllib2.HTTPError if there are network prolems.
+           Raises ValueError if the package does not exist
         """
         try:
             ccrid = info(package).ID
@@ -251,13 +250,12 @@ class CCRSession(object):
             "do_Delete": 1,
             "confirm_Delete": 0
             })
-        response = self._opener.open(CCR_PKG, data).read()
-        # FIXME: this retunrs True if the package was deleted, as well as
-        # when a non-privileged user tries to deleted a package.
-        if "href='packages.php?O=2275&amp;PP=25&amp;SO=a'" in response:
-            return True
+        self._opener.open(CCR_PKG, data).read()
+        # test if the package still exists <==> delete wasn't succesful
+        if info(package) == u"No result found":
+            return True  # package deleted
         else:
-            return False
+            return False  # pacage still exists
 
     def notify(self, package):
         """set the notify flag on a package"""
