@@ -45,26 +45,14 @@ ARG = "&arg="
 SEARCH = "search"
 INFO = "info"
 MSEARCH = "msearch"
-
-
-# Custom error codes
-#E_ALLOK = 0
-#E_GENER = 1
-#E_NETWK = 2
-#E_NOPKG = 3
-#E_NOFIL = 4
-#E_NOUSR = 5
-#E_LOGIN = 6
+LATEST = "getlatest"
 
 
 # CCR searching and info
 def _get_ccr_json(method, arg):
     """returns the parsed json - for internal use only"""
-    try:
-        with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
-            return json.loads(text.read(), object_hook=Struct)
-    except urllib2.HTTPError:
-        raise
+    with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
+        return json.loads(text.read(), object_hook=Struct)
 
 
 def search(keywords):
@@ -73,7 +61,7 @@ def search(keywords):
     try:
         return results.results
     except AttributeError:
-        raise AttributeError(results)
+        raise ValueError(results)
 
 
 def info(package):
@@ -151,8 +139,12 @@ class CCRSession(object):
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, tb):
+    def close(self):
+        """End the session"""
         self._opener.close()
+
+    def __exit__(self, type, value, tb):
+        self.close()
 
     def check_vote(self, package, return_id=False):
         """check to see if you have already voted for a package"""
@@ -304,11 +296,9 @@ class CCRSession(object):
             "ID": ccrid,
             "do_Adopt": 1
             })
-        response = self._opener.open(CCR_PKG, data).read()
-        # FIXME: This returns True if the pacage was adopted, and True
-        # if a non-privileged user attempted to adopt a non-orphaned
-        # package. The delete() workaround does not work here.
-        if "<option value='do_Disown'" in response:
+        self._opener.open(CCR_PKG, data).read()
+        pkginfo = info(package)
+        if pkginfo.Maintainer == self.username:
             return True
         else:
             return False
@@ -324,6 +314,7 @@ class CCRSession(object):
             "do_Disown": 1
             })
         response = self._opener.open(CCR_PKG, data).read()
+        # FIXME: find a more stable check
         if "href='packages.php?O=2275&amp;PP=25&amp;SO=a'" in response:
                 return False
         elif "<option value='do_Adopt'" in response:
@@ -356,9 +347,9 @@ class CCRSession(object):
 
     def setcategory(self, package, category):
         """change/set the category of a package already in the CCR
-           Raises KeyError for an invalid category, or urllib2.HTTPError
-           if there are network problems. Returns True if successful, and
-           False if not.
+           Raises KeyError for an invalid category.
+           Returns True if successful, and
+           an error message if not.
         """
         try:
             ccrid = info(package).ID
@@ -367,21 +358,19 @@ class CCRSession(object):
         data = urllib.urlencode({"action": "do_ChangeCategory",
             "category_id": self._cat2number[category]
             })
-        try:
-            pkgurl = CCR_PKG + "?ID=" + ccrid
-            response = self._opener.open(pkgurl, data).read()
-            checkstr = "selected='selected'>" + category + "</option>"
-            if checkstr in response:
-                return True
-            else:
-                return response  # return False
-        except urllib2.HTTPError:
-            raise
+        pkgurl = CCR_PKG + "?ID=" + ccrid
+        response = self._opener.open(pkgurl, data).read()
+        checkstr = "selected='selected'>" + category + "</option>"
+        if checkstr in response:
+            return True
+        else:
+            return response  # return False
 
 
 # Other
-def getlatest(num):
+def getlatest(num=10):
     """get the info for the latest num CCR packages, returns as a list"""
+    return _get_ccr_json(LATEST, str(num))
 
 
 def geturl(package):
@@ -421,17 +410,6 @@ def getfileraw(package, f):
     return url
 
 
-if __name__ == "__main__":
-    r = info("snort")
-    print("Name           : %s" % r.Name)
-    print("Version        : %s" % r.Version)
-    print("URL            : %s" % r.URL)
-    print("License        : %s" % r.License)
-    print("Category       : %s" % r.Category)
-    print("Maintainer     : %s" % r.Maintainer)
-    print("Description    : %s" % r.Description)
-    print("OutOfDate      : %s" % r.OutOfDate)
-    print("Votes          : %s" % r.NumVotes)
 if __name__ == "__main__":
     r = info("snort")
     print("Name           : %s" % r.Name)
