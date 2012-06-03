@@ -25,6 +25,18 @@ class InvalidPackage(TypeError):
     """Invalid package or wrong file type"""
 
 
+class PackageNotFound(ValueError):
+    """Package does not exit"""
+
+
+class VoteWarning(Warning):
+    """Voting didn't work"""
+
+
+class FlagWarning(Warning):
+    """Flagging as outdated didn't work"""
+
+
 class Struct(dict):
     """allows easy access to the parsed json - stolen from Inkane's paste.py"""
     def __getattr__(self, name):
@@ -61,6 +73,7 @@ def search(keywords):
     try:
         return results.results
     except AttributeError:
+        logging.debug("Nothing could be found.")
         raise ValueError(results)
 
 
@@ -70,7 +83,8 @@ def info(package):
     try:
         return results.results
     except AttributeError:
-        raise ValueError((package, results))
+        logging.warn("Pacakge couldn't be found")
+        raise PackageNotFound((package, results))
 
 
 def msearch(maintainer):
@@ -150,11 +164,8 @@ class CCRSession(object):
         """check to see if you have already voted for a package"""
         try:
             ccrid = info(package).ID
-        except (ValueError, AttributeError):
-            logging.debug("{} does not exist".format(package))
-            # package does not exist
-            # maybe add error message here?
-            raise ValueError(package)
+        except (ValueError, AttributeError):  # AttributeError shouldn't occur
+            raise PackageNotFound(package)
         response = self._opener.open(CCR_PKG + "?ID=" + ccrid)
         if "class='button' name='do_UnVote'" in response.read():
             return ((True, ccrid) if return_id else True)
@@ -162,72 +173,76 @@ class CCRSession(object):
             return ((False, ccrid) if return_id else False)
 
     def unvote(self, package):
-        """unvote for a package on CCR
-           returns False if the package didn't have a vote
-           returns True on success
-           raises an ValueError if the package doesn't exist
+        """unvote a package on CCR
+           raises a Warning if it is already unvoted or if it couldn't unvote
+           raises a PackageNotFound excepion if the package doesn't exist
         """
-        try:
-            voted, id = self.check_vote(package, True)
-            if not voted:
-                return True  # package didn't have a vote
-            data = urllib.urlencode({"IDs[%s]" % (id): 1,
-                "ID": id,
-                "do_UnVote": 1
-                })
-            self._opener.open(CCR_PKG, data)
-            # check if the package is unvoted now
-            return not self.check_vote(package)
-        except ValueError:
-            logging.warn("Package doesn't exist!")
-            raise
+        # check_vote might raise PackageNotFound
+        voted, id = self.check_vote(package, return_id=True)
+        if not voted:
+            raise VoteWarning("Already unvoted!")  # package didn't have a vote
+        data = urllib.urlencode({"IDs[%s]" % (id): 1,
+            "ID": id,
+            "do_UnVote": 1
+            })
+        self._opener.open(CCR_PKG, data)
+        # check if the package is unvoted now
+        if self.check_vote(package):
+            raise VoteWarning("Couldn't unvote {}".format(package))
 
     def vote(self, package):
         """vote for a package on CCR
-           returns False if  already voted
-           returns True on success
-           raises a ValueError if the package doesn't exist
+           raises a Warning if it is already voted or if it couldn't vote
+           raises a PackageNotFound if the package doesn't exist
         """
-        try:
-            voted, id = self.check_vote(package, True)
-            if voted:
-                return True  # package  is already voted
-            data = urllib.urlencode({"IDs[%s]" % (id): 1,
-                "ID": id,
-                "do_Vote": 1
-                })
-            self._opener.open(CCR_PKG, data)
-            # check if the package is unvoted now
-            return self.check_vote(package)
-        except ValueError:
-            logging.warn("Package doesn't exist!")
-            raise
+        # next line might raise PackageNotFound
+        voted, id = self.check_vote(package, return_id=True)
+        if voted:
+            raise VoteWarning("Already voted!")  # package  is already voted
+        data = urllib.urlencode({"IDs[%s]" % (id): 1,
+            "ID": id,
+            "do_Vote": 1
+            })
+        self._opener.open(CCR_PKG, data)
+        # check if the package is unvoted now
+        if not self.check_vote(package):
+            raise VoteWarning("Couldn't vote for {}".format(package))
 
     def flag(self, package):
-        """flag a CCR package as out of date"""
+        """flag a CCR package as out of date
+           raises a ValueError if the package doesn't exist
+           raises a FlagWarning on failure
+        """
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
+            # FIXME use a better exception handling
             raise ValueError(package)
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
             "do_Flag": 1
             })
         self._opener.open(CCR_PKG, data)
-        return False if (info(package).OutOfDate == 0) else True
+        if (info(package).OutOfDate == 0):
+            raise FlagWarning("Couldn't flag {} as out of date".format(package))
 
     def unflag(self, package):
-        """unflag a CCR package as out of date"""
+        """unflag a CCR package as out of date
+           raises a ValueError if the package doesn't exist
+           raises a FlagWarning on failure
+        """
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
+            # FIXME use a better exception handling
             raise ValueError(package)
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
             "do_UnFlag": 1
             })
         self._opener.open(CCR_PKG, data)
-        return True if (info(package).OutOfDate == 0) else False
+        if (info(package).OutOfDate == 0):
+            raise FlagWarning("Couldn't remove flag".format(package))
 
     def delete(self, package):
         """delete a package from CCR
