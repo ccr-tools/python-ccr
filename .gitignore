@@ -5,3 +5,4 @@ pkg/
 *.tar*
 .ropeproject/
 *.orig
+.directory

@@ -36,6 +36,13 @@ class VoteWarning(Warning):
 class FlagWarning(Warning):
     """Flagging as outdated didn't work"""
 
+class DeleteWarning(Warning):
+    """Delete didn't work"""
+
+
+class NotifyWarning(Warning):
+    """Setting the Notification didn't work"""
+
 
 class Struct(dict):
     """allows easy access to the parsed json - stolen from Inkane's paste.py"""
@@ -174,7 +181,7 @@ class CCRSession(object):
 
     def unvote(self, package):
         """unvote a package on CCR
-           raises a Warning if it is already unvoted or if it couldn't unvote
+           raises a VoteWarning if it is already unvoted or if it couldn't unvote
            raises a PackageNotFound excepion if the package doesn't exist
         """
         # check_vote might raise PackageNotFound
@@ -192,7 +199,7 @@ class CCRSession(object):
 
     def vote(self, package):
         """vote for a package on CCR
-           raises a Warning if it is already voted or if it couldn't vote
+           raises a VoteWarning if it is already voted or if it couldn't vote
            raises a PackageNotFound if the package doesn't exist
         """
         # next line might raise PackageNotFound
@@ -223,7 +230,7 @@ class CCRSession(object):
             "do_Flag": 1
             })
         self._opener.open(CCR_PKG, data)
-        if (info(package).OutOfDate == 0):
+        if (info(package).OutOfDate == "0"):
             raise FlagWarning("Couldn't flag {} as out of date".format(package))
 
     def unflag(self, package):
@@ -241,12 +248,13 @@ class CCRSession(object):
             "do_UnFlag": 1
             })
         self._opener.open(CCR_PKG, data)
-        if (info(package).OutOfDate == 0):
+        if (info(package).OutOfDate == "0"):
             raise FlagWarning("Couldn't remove flag".format(package))
 
     def delete(self, package):
         """delete a package from CCR
            Raises ValueError if the package does not exist
+           Raises a DeleteWarning on failure
         """
         try:
             ccrid = info(package).ID
@@ -259,10 +267,8 @@ class CCRSession(object):
             })
         self._opener.open(CCR_PKG, data).read()
         # test if the package still exists <==> delete wasn't succesful
-        if info(package) == u"No result found":
-            return True  # package deleted
-        else:
-            return False  # pacage still exists
+        if info(package) != u"No result found":
+            raise DeleteWarning("Couldn't delete {}".format(package))
 
     def notify(self, package):
         """set the notify flag on a package"""
@@ -275,11 +281,8 @@ class CCRSession(object):
             "do_Notify": 1
             })
         response = self._opener.open(CCR_PKG, data).read()
-        if "<option value='do_UnNotify'" in response:
-            return True
-        else:
-                return response
-                #return False
+        if "<option value='do_UnNotify'" not in response:
+            raise NotifyWarning(response)
 
     def unnotify(self, package):
         """unset the notify flag on a package"""
