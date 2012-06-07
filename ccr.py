@@ -49,6 +49,14 @@ class OwnershipWarning(Warning):
     """Adopting a package failed"""
 
 
+class SubmitWarning(Warning):
+    """Submitting failed"""
+
+
+class CategoryWarning(Warning):
+    """Setting the category failed"""
+
+
 class Struct(dict):
     """allows easy access to the parsed json - stolen from Inkane's paste.py"""
     def __getattr__(self, name):
@@ -290,6 +298,7 @@ class CCRSession(object):
             "do_Notify": 1
             })
         response = self._opener.open(CCR_PKG, data).read()
+        # FIXME use a more stable check
         if "<option value='do_UnNotify'" not in response:
             raise NotifyWarning(response)
 
@@ -304,10 +313,8 @@ class CCRSession(object):
             "do_UnNotify": 1
             })
         response = self._opener.open(CCR_PKG, data).read()
-        if "<option value='do_Notify'" in response:
-            return True
-        else:
-            return False
+        if "<option value='do_Notify'" not in response:
+            raise NotifyWarning(response)
 
     def adopt(self, package):
         """adopt an orphaned CCR package"""
@@ -358,31 +365,27 @@ class CCRSession(object):
         error_message = re.search(error, response)
         if error_message:
             raise InvalidPackage(error_message.groupdict()["message"])
-        if "pkgbuild_view.php?p=" in response:
-            return True
-        else:
-            return False
+        if "pkgbuild_view.php?p=" not in response:
+            raise SubmitWarning("Couldn't submit {}".format("package"))
 
     def setcategory(self, package, category):
         """change/set the category of a package already in the CCR
-           Raises KeyError for an invalid category.
-           Returns True if successful, and
-           an error message if not.
+           Raises CategoryWarning for an invalid category or if it fials.
         """
+        pkginfo = info(package)
+        ccrid = pkginfo.ID
         try:
-            ccrid = info(package).ID
-        except (ValueError, AttributeError):
-            raise ValueError(package)
-        data = urllib.urlencode({"action": "do_ChangeCategory",
-            "category_id": self._cat2number[category]
-            })
+            data = urllib.urlencode({"action": "do_ChangeCategory",
+                "category_id": self._cat2number[category]
+                })
+        except KeyError:
+            raise CategoryWarning("Invalid category!")
         pkgurl = CCR_PKG + "?ID=" + ccrid
         response = self._opener.open(pkgurl, data).read()
+        #FIXME find a more stable check
         checkstr = "selected='selected'>" + category + "</option>"
-        if checkstr in response:
-            return True
-        else:
-            return response  # return False
+        if checkstr not in response:
+            raise CategoryWarning(response)
 
 
 # Other
