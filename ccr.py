@@ -91,6 +91,7 @@ def search(keywords):
 
 def info(package):
     """get information for a specific package - returns results as a list"""
+    package = urllib.quote(package)
     results = _get_ccr_json(INFO, package)
     try:
         if results.results == u'No result found':
