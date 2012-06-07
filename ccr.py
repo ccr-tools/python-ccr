@@ -36,12 +36,17 @@ class VoteWarning(Warning):
 class FlagWarning(Warning):
     """Flagging as outdated didn't work"""
 
+
 class DeleteWarning(Warning):
     """Delete didn't work"""
 
 
 class NotifyWarning(Warning):
     """Setting the Notification didn't work"""
+
+
+class OwnershipWarning(Warning):
+    """Adopting a package failed"""
 
 
 class Struct(dict):
@@ -309,17 +314,15 @@ class CCRSession(object):
             if package_info.Maintainer != u'[PKGBUILD error: non-UTF8 character]':
                 logging.warn("Warning: Adopting maintained package!")
         except (ValueError, AttributeError):
-            raise ValueError(package)
+            raise ValueError("Package {} doesn't exist!".format(package))
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
             "do_Adopt": 1
             })
         self._opener.open(CCR_PKG, data).read()
         pkginfo = info(package)
-        if pkginfo.Maintainer == self.username:
-            return True
-        else:
-            return False
+        if pkginfo.Maintainer != self.username:
+            raise OwnershipWarning("Couldn't adopt {}".format(package))
 
     def disown(self, package):
         """disown a CCR package"""
@@ -333,12 +336,9 @@ class CCRSession(object):
             })
         response = self._opener.open(CCR_PKG, data).read()
         # FIXME: find a more stable check
-        if "href='packages.php?O=2275&amp;PP=25&amp;SO=a'" in response:
-                return False
-        elif "<option value='do_Adopt'" in response:
-            return True
-        else:
-            return False
+        if ("href='packages.php?O=2275&amp;PP=25&amp;SO=a'" in response) or (
+                "<option value='do_Adopt'" not in response):
+            raise OwnershipWarning("Couldn't disown {}".format(package))
 
     def submit(self, f, category):
         """submit a package to CCR
