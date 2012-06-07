@@ -83,6 +83,7 @@ LATEST = "getlatest"
 # CCR searching and info
 def _get_ccr_json(method, arg):
     """returns the parsed json - for internal use only"""
+    arg = urllib.quote(arg)
     with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
         return json.loads(text.read(), object_hook=Struct)
 
@@ -99,7 +100,6 @@ def search(keywords):
 
 def info(package):
     """get information for a specific package - returns results as a list"""
-    package = urllib.quote(package)
     results = _get_ccr_json(INFO, package)
     try:
         if results.results == u'No result found':
