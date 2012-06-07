@@ -93,6 +93,9 @@ def info(package):
     """get information for a specific package - returns results as a list"""
     results = _get_ccr_json(INFO, package)
     try:
+        if results.results == u'No result found':
+            logging.warn("Pacakge couldn't be found")
+            raise PackageNotFound("Package {} couldn't be found".format(package))
         return results.results
     except AttributeError:
         logging.warn("Pacakge couldn't be found")
@@ -307,14 +310,11 @@ class CCRSession(object):
 
     def adopt(self, package):
         """adopt an orphaned CCR package"""
-        try:
-            package_info = info(package)
-            ccrid = package_info.ID
-            # TODO don't only warn but do somethnig
-            if package_info.Maintainer != u'[PKGBUILD error: non-UTF8 character]':
-                logging.warn("Warning: Adopting maintained package!")
-        except (ValueError, AttributeError):
-            raise ValueError("Package {} doesn't exist!".format(package))
+        pkginfo = info(package)
+        ccrid = pkginfo.ID
+        # TODO don't only warn but do somethnig
+        if pkginfo.Maintainer != u'[PKGBUILD error: non-UTF8 character]':
+            logging.warn("Warning: Adopting maintained package!")
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
             "do_Adopt": 1
@@ -326,10 +326,8 @@ class CCRSession(object):
 
     def disown(self, package):
         """disown a CCR package"""
-        try:
-            ccrid = info(package).ID
-        except (ValueError, AttributeError):
-            raise ValueError(package)
+        pkginfo = info(package)
+        ccrid = pkginfo.ID
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
             "ID": ccrid,
             "do_Disown": 1
@@ -337,7 +335,8 @@ class CCRSession(object):
         response = self._opener.open(CCR_PKG, data).read()
         # FIXME: find a more stable check
         if ("href='packages.php?O=2275&amp;PP=25&amp;SO=a'" in response) or (
-                "<option value='do_Adopt'" not in response):
+                "<option value='do_Adopt'" not in response) or (
+                info(package).MaintainerUID != 0):
             raise OwnershipWarning("Couldn't disown {}".format(package))
 
     def submit(self, f, category):
