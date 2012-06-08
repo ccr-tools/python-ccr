@@ -114,7 +114,9 @@ def _get_ccr_json(method, arg):
     # arg must must be quoted to allow input like 'ls++-git'
     arg = urllib.quote(arg)
     with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
-        return json.loads(text.read(), object_hook=Struct)
+        t = text.read()
+        logging.debug(t)
+        return json.loads(t, object_hook=Struct)
 
 
 def search(keywords):
