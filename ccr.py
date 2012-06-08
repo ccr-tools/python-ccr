@@ -83,6 +83,7 @@ LATEST = "getlatest"
 # CCR searching and info
 def _get_ccr_json(method, arg):
     """returns the parsed json - for internal use only"""
+    # arg must must be quoted to allow input like 'ls++-git'
     arg = urllib.quote(arg)
     with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
         return json.loads(text.read(), object_hook=Struct)
@@ -103,11 +104,11 @@ def info(package):
     results = _get_ccr_json(INFO, package)
     try:
         if results.results == u'No result found':
-            logging.warn("Pacakge couldn't be found")
+            logging.warn("Package couldn't be found")
             raise PackageNotFound("Package {} couldn't be found".format(package))
         return results.results
     except AttributeError:
-        logging.warn("Pacakge couldn't be found")
+        logging.warn("Package couldn't be found")
         raise PackageNotFound((package, results))
 
 
@@ -274,7 +275,8 @@ class CCRSession(object):
            Raises a DeleteWarning on failure
         """
         try:
-            ccrid = info(package).ID
+            pkginfo = info(package)
+            ccrid = pkginfo.ID
         except (ValueError, AttributeError):
             raise ValueError(package)
         data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
@@ -284,8 +286,13 @@ class CCRSession(object):
             })
         self._opener.open(CCR_PKG, data).read()
         # test if the package still exists <==> delete wasn't succesful
-        if info(package) != u"No result found":
+        # FIXME use _getccr for a quicker check, avoiding the need to catch the
+        # excption
+        try:
+            info(package)
             raise DeleteWarning("Couldn't delete {}".format(package))
+        except PackageNotFound:
+            pass  # everything works
 
     def notify(self, package):
         """set the notify flag on a package"""
