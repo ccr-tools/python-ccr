@@ -29,31 +29,35 @@ class PackageNotFound(ValueError):
     """Package does not exit"""
 
 
-class VoteWarning(Warning):
+class CCRWarning(Warning):
+    """Base class for all other warnings"""
+
+
+class VoteWarning(CCRWarning):
     """Voting didn't work"""
 
 
-class FlagWarning(Warning):
+class FlagWarning(CCRWarning):
     """Flagging as outdated didn't work"""
 
 
-class DeleteWarning(Warning):
+class DeleteWarning(CCRWarning):
     """Delete didn't work"""
 
 
-class NotifyWarning(Warning):
+class NotifyWarning(CCRWarning):
     """Setting the Notification didn't work"""
 
 
-class OwnershipWarning(Warning):
+class OwnershipWarning(CCRWarning):
     """Adopting a package failed"""
 
 
-class SubmitWarning(Warning):
+class SubmitWarning(CCRWarning):
     """Submitting failed"""
 
 
-class CategoryWarning(Warning):
+class CategoryWarning(CCRWarning):
     """Setting the category failed"""
 
 
