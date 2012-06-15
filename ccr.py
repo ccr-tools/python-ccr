@@ -125,7 +125,7 @@ def msearch(maintainer):
         raise ValueError((maintainer, results))
 
 
-def orphan():
+def list_orphans():
     """search for orphaned packages - returns results as a list"""
     return msearch("0")
 
