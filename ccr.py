@@ -11,6 +11,7 @@ __version__ = 0.2
 
 import json
 import contextlib
+import httplib
 import urllib
 import urllib2
 import cookielib
@@ -19,6 +20,35 @@ import logging
 import re
 
 logging.basicConfig(level=logging.DEBUG, format='>> %(levelname)s - %(message)s')
+
+
+# helper classes and functions
+########################################
+class Struct(dict):
+    """allows easy access to the parsed json - stolen from Inkane's paste.py"""
+    def __getattr__(self, name):
+        return self[name]
+
+    def __setattr__(self, name, value):
+        self[name] = value
+
+    def __delattr__(self, name):
+        del self[name]
+
+
+def file_exists(site, path):
+    """checks if a file exists on the server
+
+    :site: url of the site
+    :path: the path to a specific file
+    :returns: True if the url exists, else false
+
+    """
+    with httplib.HTTPConnection(site) as conn:
+        conn.request('HEAD', path)
+        response = conn.getresponse()
+    return response.status in (200, 301, 302)
+########################################
 
 
 class InvalidPackage(TypeError):
@@ -33,6 +63,7 @@ class CCRWarning(Warning):
     """Base class for all other warnings"""
 
 
+#TODO reevaluate if those more specific excetpions should be used at all
 class _VoteWarning(CCRWarning):
     """Voting didn't work"""
 
@@ -59,18 +90,6 @@ class _SubmitWarning(CCRWarning):
 
 class _CategoryWarning(CCRWarning):
     """Setting the category failed"""
-
-
-class Struct(dict):
-    """allows easy access to the parsed json - stolen from Inkane's paste.py"""
-    def __getattr__(self, name):
-        return self[name]
-
-    def __setattr__(self, name, value):
-        self[name] = value
-
-    def __delattr__(self, name):
-        del self[name]
 
 
 CCR_BASE = "http://chakra-linux.org/ccr/"
