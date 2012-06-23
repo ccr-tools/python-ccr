@@ -2,10 +2,10 @@
 """A simple Python lib to access the Chakra Community Repository"""
 from __future__ import print_function
 
-__all__ = ["getfileraw", "getpkgbuild",
-        "getpkgbuildraw", "getpkgurl", "geturl", "info",
-        "msearch", "search",
-        ]
+#__all__ = ["getfileraw", "getpkgbuild",
+        #"getpkgbuildraw", "getpkgurl", "geturl", "info",
+        #"msearch", "search",
+        #]
 __version__ = 0.2
 
 
@@ -39,12 +39,17 @@ class Struct(dict):
 def file_exists(site, path):
     """checks if a file exists on the server
 
-    :site: url of the site
+    :site: url of the site, without protocol
     :path: the path to a specific file
     :returns: True if the url exists, else false
 
     """
-    with httplib.HTTPConnection(site) as conn:
+    site = urllib.quote(site)
+    path = urllib.quote(path)
+    print(site)
+    print(path)
+
+    with contextlib.closing(httplib.HTTPConnection(site)) as conn:
         conn.request('HEAD', path)
         response = conn.getresponse()
     return response.status in (200, 301, 302)
@@ -441,20 +446,20 @@ def getpkgurl(package):
     return url
 
 
-def getpkgbuild(package):
+def get_pkgbuild_url(package):
     """get the url to the online PKGBUILD viewer"""
     url = CCR_BASE + "pkgbuild_view.php?p=" + package
     return url
 
 
-def getpkgbuildraw(package):
+def get_pkgbuildraw_url(package):
     """get the url to the actual PKGBUILD"""
     path = "packages/" + package[:2] + "/" + package + "/" + package + "/"
     url = CCR_BASE + path + "PKGBUILD"
     return url
 
 
-def getfileraw(package, f):
+def getfileraw_url(package, f):
     """get the url to an arbitrary file f, like a .install"""
     path = "packages/" + package[:2] + "/" + package + "/" + package + "/"
     url = CCR_BASE + path + f
