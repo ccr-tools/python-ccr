@@ -431,7 +431,7 @@ def getlatest(num=10):
     return _get_ccr_json(LATEST, str(num))
 
 
-def geturl(package):
+def getccrurl(package):
     """get the URL of the package's CCR page"""
     try:
         ccrid = info(package).ID
