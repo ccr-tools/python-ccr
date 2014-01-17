@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 """A simple Python lib to access the Chakra Community Repository"""
 from __future__ import print_function
 
@@ -9,14 +9,12 @@ __all__ = ["getfileraw", "getpkgbuild",
 __version__ = 0.2
 
 
-import json
 import contextlib
-import urllib
-import urllib2
-import cookielib
-import poster
-import logging
+import requests
+import urllib.parse
+import json
 import re
+import logging
 
 logging.basicConfig(level=logging.DEBUG, format='>> %(levelname)s - %(message)s')
 
@@ -73,7 +71,7 @@ class Struct(dict):
         del self[name]
 
 
-CCR_BASE = "http://chakra-linux.org/ccr/"
+CCR_BASE = "http://chakra-project.org/ccr/"
 CCR_RPC = CCR_BASE + "rpc.php?type="
 CCR_PKG = CCR_BASE + "packages.php"
 CCR_SUBMIT = CCR_BASE + "pkgsubmit.php"
@@ -88,9 +86,9 @@ LATEST = "getlatest"
 def _get_ccr_json(method, arg):
     """returns the parsed json - for internal use only"""
     # arg must must be quoted to allow input like 'ls++-git'
-    arg = urllib.quote(arg)
-    with contextlib.closing(urllib2.urlopen(CCR_RPC + method + ARG + arg)) as text:
-        return json.loads(text.read(), object_hook=Struct)
+    arg = urllib.parse.quote(arg)
+    with contextlib.closing(requests.get(CCR_RPC + method + ARG + arg)) as results:
+        return json.loads(results.text, object_hook=Struct)
 
 
 def search(keywords):
@@ -108,11 +106,11 @@ def info(package):
     results = _get_ccr_json(INFO, package)
     try:
         if results.results == u'No result found':
-            logging.warn("Package couldn't be found")
+            logging.warning("Package couldn't be found")
             raise PackageNotFound("Package {} couldn't be found".format(package))
         return results.results
     except AttributeError:
-        logging.warn("Package couldn't be found")
+        logging.warning("Package couldn't be found")
         raise PackageNotFound((package, results))
 
 
@@ -157,246 +155,300 @@ class CCRSession(object):
                 "lib32": 19,
                 }
         self.username = username
-        remember_me = 'off' if rememberme else "on"
-        data = urllib.urlencode({"user": username,
-            "passwd": password,
-            "remember_me": remember_me
-            })
-        self._opener = poster.streaminghttp.register_openers()
-        self._opener.add_handler(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
-        # do a check if the login did work
-        try:
-            self._opener.open(CCR_BASE, data)
-        except urllib2.HTTPError:
-            # Network error occured
-            # TODO: some error handling stuff
-            logging.debug("A network error occured")
-            raise
-        checkstr = "packages.php?SeB=m&K=" + username
-        response = self._opener.open(CCR_BASE).read()
-        if not (checkstr in response):
-            logging.debug("There was an error logging in")
-            logging.debug("Please check if username and password are correct")
+        self._session = requests.session()
+        remember_me = "off" if rememberme else "on"
+        data = {'user': username,
+                'passwd': password,
+                'remember_me': remember_me
+        }
+
+        self._session.post(CCR_BASE, data=data)
+
+        if not ("AURSID" in self._session.cookies):
+            logging.debug("There was an error logging in. "
+                          "Please check if username and password are correct")
             raise ValueError(username, password)
+
 
     def __enter__(self):
         return self
 
-    def close(self):
-        """End the session"""
-        self._opener.close()
 
     def __exit__(self, type, value, tb):
         self.close()
 
+
+    def close(self):
+        """end the session"""
+        self._session.close()
+
+
     def check_vote(self, package, return_id=False):
-        """check to see if you have already voted for a package"""
+        """check to see if you have already voted for a package
+        raises a PackageNotFound exception if the package doesn't exist
+        raises a ConnectionError if a network error occur"""
         try:
             ccrid = info(package).ID
-        except (ValueError, AttributeError):  # AttributeError shouldn't occur
+        except (ValueError, AttributeError): # AttributeError shouldn't occur
             raise PackageNotFound(package)
-        response = self._opener.open(CCR_PKG + "?ID=" + ccrid)
-        if "class='button' name='do_UnVote'" in response.read():
+
+        response = self._session.get(CCR_PKG + "?ID=" + ccrid)
+
+        if "class='button' name='do_UnVote'" in response.text:
             return ((True, ccrid) if return_id else True)
         else:
             return ((False, ccrid) if return_id else False)
 
+
     def unvote(self, package):
         """unvote a package on CCR
-           raises a _VoteWarning if it is already unvoted or if it couldn't unvote
-           raises a PackageNotFound excepion if the package doesn't exist
-        """
+        raises a PackageNotFound exception if the package doesn't exist
+        raises a ConnectionError if a network error occur
+        raises a _VoteWarning if it is already unvoted or if it couldn't unvote"""
         # check_vote might raise PackageNotFound
         voted, id = self.check_vote(package, return_id=True)
         if not voted:
-            raise _VoteWarning("Already unvoted!")  # package didn't have a vote
-        data = urllib.urlencode({"IDs[%s]" % (id): 1,
-            "ID": id,
-            "do_UnVote": 1
-            })
-        self._opener.open(CCR_PKG, data)
+            raise _VoteWarning("Already unvoted or never voted!") # package didn't have a vote or never voted
+
+        data = {"IDs[%s]" % (id): 1,
+                "ID": id,
+                "do_UnVote": 1
+        }
+        self._session.post(CCR_PKG, data=data)
+
         # check if the package is unvoted now
         if self.check_vote(package):
             raise _VoteWarning("Couldn't unvote {}".format(package))
 
+
     def vote(self, package):
         """vote for a package on CCR
-           raises a _VoteWarning if it is already voted or if it couldn't vote
-           raises a PackageNotFound if the package doesn't exist
-        """
-        # next line might raise PackageNotFound
-        voted, id = self.check_vote(package, return_id=True)
+        raises a PackageNotFound if the package doesn't exist
+        raises a ConnectionError if a network error occur
+        raises a _VoteWarning if it is already voted or if it couldn't vote"""
+        # check_vote might raise PackageNotFound
+        voted, ccrid = self.check_vote(package, return_id=True)
         if voted:
-            raise _VoteWarning("Already voted!")  # package  is already voted
-        data = urllib.urlencode({"IDs[%s]" % (id): 1,
-            "ID": id,
-            "do_Vote": 1
-            })
-        self._opener.open(CCR_PKG, data)
-        # check if the package is unvoted now
+            raise _VoteWarning("Already voted!") # package is already voted
+
+        data = {"IDs[%s]" % (ccrid): 1,
+                "ID": ccrid,
+                "do_Vote": 1
+        }
+        self._session.post(CCR_PKG, data=data)
+
+        # check if the package is voted now
         if not self.check_vote(package):
             raise _VoteWarning("Couldn't vote for {}".format(package))
 
+
     def flag(self, package):
         """flag a CCR package as out of date
-           raises a ValueError if the package doesn't exist
-           raises a _FlagWarning on failure
-        """
+        raises a ValueError if the package doesn't exist
+        raises a ConnectionError if a network error occur
+        raises a _FlagWarning on failure"""
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
-            # FIXME use a better exception handling
-            raise ValueError(package)
-        data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
-            "ID": ccrid,
-            "do_Flag": 1
-            })
-        self._opener.open(CCR_PKG, data)
-        if (info(package).OutOfDate == "0"):
+            raise PackageNotFound(package)
+
+        data = {"IDs[%s]" % (ccrid): 1,
+                "ID": ccrid,
+                "do_Flag": 1
+        }
+        self._session.post(CCR_PKG, data=data)
+
+        if info(package).OutOfDate == "0":
             raise _FlagWarning("Couldn't flag {} as out of date".format(package))
+
 
     def unflag(self, package):
         """unflag a CCR package as out of date
-           raises a ValueError if the package doesn't exist
-           raises a _FlagWarning on failure
-        """
+        raises a ValueError if the package doesn't exist
+        raises a ConnectionError if a network error occur
+        raises a _FlagWarning on failure"""
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
-            # FIXME use a better exception handling
-            raise ValueError(package)
-        data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
-            "ID": ccrid,
-            "do_UnFlag": 1
-            })
-        self._opener.open(CCR_PKG, data)
-        if (info(package).OutOfDate == "0"):
+            raise PackageNotFound(package)
+
+        data = {"IDs[%s]" % (ccrid): 1,
+                "ID": ccrid,
+                "do_UnFlag": 1
+        }
+        self._session.post(CCR_PKG, data=data)
+
+        if (info(package).OutOfDate == "1"):
             raise _FlagWarning("Couldn't remove flag".format(package))
+
 
     def delete(self, package):
         """delete a package from CCR
-           Raises ValueError if the package does not exist
-           Raises a _DeleteWarning on failure
-        """
+        raises ValueError if the package does not exist
+        raises a ConnectionError if a network error occur
+        raises a _DeleteWarning on failure"""
         try:
             pkginfo = info(package)
             ccrid = pkginfo.ID
         except (ValueError, AttributeError):
             raise ValueError(package)
-        data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
-            "ID": ccrid,
-            "do_Delete": 1,
-            "confirm_Delete": 0
-            })
-        self._opener.open(CCR_PKG, data).read()
+
+        data = {"IDs[%s]" % (ccrid): 1,
+                "ID": ccrid,
+                "do_Delete": 1,
+                "confirm_Delete": 0
+        }
+        self._session.post(CCR_PKG, data=data)
+
         # test if the package still exists <==> delete wasn't succesful
-        # FIXME use _getccr for a quicker check, avoiding the need to catch the
-        # excption
+        # FIXME use _getccr for a quicker check, avoiding the need to catch the exception
         try:
             info(package)
             raise _DeleteWarning("Couldn't delete {}".format(package))
         except PackageNotFound:
-            pass  # everything works
+            pass # everything works
+
 
     def notify(self, package):
-        """set the notify flag on a package"""
+        """set the notify flag on a package
+        raises ValueError if the package does not exist
+        raises a ConnectionError if a network error occur
+        raises a _NotifyWarning on failure"""
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
             raise ValueError(package)
-        data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
-            "ID": ccrid,
-            "do_Notify": 1
-            })
-        response = self._opener.open(CCR_PKG, data).read()
+
+        data = {"IDs[%s]" % (ccrid): 1,
+                "ID": ccrid,
+                "do_Notify": 1
+        }
+        response = self._session.post(CCR_PKG, data=data)
+
         # FIXME use a more stable check
-        if "<option value='do_UnNotify'" not in response:
+        if "<option value='do_UnNotify'" not in response.text:
             raise _NotifyWarning(response)
+
 
     def unnotify(self, package):
-        """unset the notify flag on a package"""
+        """unset the notify flag on a package
+        raises ValueError if the package does not exist
+        raises a ConnectionError if a network error occur
+        raises a _NotifyWarning on failure"""
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
             raise ValueError(package)
-        data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
-            "ID": ccrid,
-            "do_UnNotify": 1
-            })
-        response = self._opener.open(CCR_PKG, data).read()
-        if "<option value='do_Notify'" not in response:
+
+        data = {"IDs[%s]" % (ccrid): 1,
+                "ID": ccrid,
+                "do_UnNotify": 1
+        }
+        response = self._session.post(CCR_PKG, data=data)
+
+        if "<option value='do_Notify'" not in response.text:
             raise _NotifyWarning(response)
 
+
     def adopt(self, package):
-        """adopt an orphaned CCR package"""
-        pkginfo = info(package)
-        ccrid = pkginfo.ID
-        # TODO don't only warn but do somethnig
-        if pkginfo.Maintainer != u'[PKGBUILD error: non-UTF8 character]':
-            logging.warn("Warning: Adopting maintained package!")
-        data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
-            "ID": ccrid,
-            "do_Adopt": 1
-            })
-        self._opener.open(CCR_PKG, data).read()
-        pkginfo = info(package)
+        """adopt an orphaned CCR package
+        raises ValueError if the package does not exist
+        raises a ConnectionError if a network error occur
+        raises a _OwnershipWarning if the package is already maintained or if it fails"""
+        try:
+            pkginfo = info(package)
+            ccrid = pkginfo.ID
+        except (ValueError, AttributeError):
+            raise ValueError(package)
+
+        if pkginfo.MaintainerUID != "0":
+            logging.warning("Warning: Adopting maintained package!")
+            raise _OwnershipWarning("Couldn't adopt {} : already maintained.".format(package))
+
+        data = {"IDs[%s]" % (ccrid): 1,
+                "ID": ccrid,
+                "do_Adopt": 1
+        }
+        self._session.post(CCR_PKG, data=data)
+
+        try:
+            pkginfo = info(package)
+        except (ValueError):
+            raise ValueError(package)
+
         if pkginfo.Maintainer != self.username:
             raise _OwnershipWarning("Couldn't adopt {}".format(package))
 
+
     def disown(self, package):
-        """disown a CCR package"""
-        pkginfo = info(package)
-        ccrid = pkginfo.ID
-        data = urllib.urlencode({"IDs[%s]" % (ccrid): 1,
-            "ID": ccrid,
-            "do_Disown": 1
-            })
-        response = self._opener.open(CCR_PKG, data).read()
+        """disown a CCR package
+        raises ValueError if the package does not exist
+        raises a ConnectionError if a network error occur
+        raises a _OwnershipWarning on failure"""
+        try:
+            pkginfo = info(package)
+            ccrid = pkginfo.ID
+        except (ValueError, AttributeError):
+            raise ValueError(package)
+
+        data = {"IDs[%s]" % (ccrid): 1,
+                "ID": ccrid,
+                "do_Disown": 1
+        }
+        response = self._session.post(CCR_PKG, data=data)
+
         # FIXME: find a more stable check
-        if ("href='packages.php?O=2275&amp;PP=25&amp;SO=a'" in response) or (
-                "<option value='do_Adopt'" not in response) or (
-                info(package).MaintainerUID != 0):
+        if ("href='packages.php?O=2275&amp;PP=25&amp;SO=a'" in response.text) or (
+            "<option value='do_Adopt'" not in response.text) or (
+            info(package).MaintainerUID != 0):
             raise _OwnershipWarning("Couldn't disown {}".format(package))
+
 
     def submit(self, f, category):
         """submit a package to CCR
-           Raises KeyError on bad category, IOError [Errno 2] if 'f'
-           does not exist, and urllib2.HTTPError if there are network
-           problems. Returns True if successful, and False if not.
-        """
-        error = re.compile(r"<span class='error'>(?P<message>.*)</span>")
-        params = {"pkgsubmit": 1,
-                "category": self._cat2number[category],
-                "pfile": open(f, "rb")
-                }
-        datagen, headers = poster.encode.multipart_encode(params)
-        request = urllib2.Request(CCR_SUBMIT, datagen, headers)
-        response = urllib2.urlopen(request).read()
+        raises KeyError on bad category
+        raises IOError [Errno 2] if 'f' does not exist
+        raises a ConnectionError if a network error occur"""
 
-        error_message = re.search(error, response)
+        error = re.compile(r"<span class='error'>(?P<message>.*)</span>")
+        data = {"pkgsubmit": 1,
+                "category": self._cat2number[category],
+        }
+        files = {'pfile': open(f, "rb")}
+        response = self._session.post(CCR_SUBMIT, data=data, files=files)
+
+        error_message = re.search(error, response.text)
         if error_message:
             raise InvalidPackage(error_message.groupdict()["message"])
-        if "pkgbuild_view.php?p=" not in response:
+        if "pkgbuild_view.php?p=" not in response.text:
             raise _SubmitWarning("Couldn't submit {}".format("package"))
+
 
     def setcategory(self, package, category):
         """change/set the category of a package already in the CCR
-           Raises _CategoryWarning for an invalid category or if it fials.
-        """
-        pkginfo = info(package)
-        ccrid = pkginfo.ID
+        raises ValueError if the package does not exist
+        raises a requests.ConnectionError if a network error occur
+        raises _CategoryWarning for an invalid category or if it fails."""
         try:
-            data = urllib.urlencode({"action": "do_ChangeCategory",
-                "category_id": self._cat2number[category]
-                })
+            pkginfo = info(package)
+            ccrid = pkginfo.ID
+        except (ValueError, AttributeError):
+            raise ValueError(package)
+
+        try:
+            data = {"action": "do_ChangeCategory",
+                    "category_id": self._cat2number[category]
+            }
         except KeyError:
             raise _CategoryWarning("Invalid category!")
+
         pkgurl = CCR_PKG + "?ID=" + ccrid
-        response = self._opener.open(pkgurl, data).read()
+        response = self._session.post(pkgurl, data=data)
+
         #FIXME find a more stable check
         checkstr = "selected='selected'>" + category + "</option>"
-        if checkstr not in response:
-            raise _CategoryWarning(response)
+        if checkstr not in response.text:
+            raise _CategoryWarning(response.text)
 
 
 # Other
@@ -443,13 +495,29 @@ def getfileraw(package, f):
 
 
 if __name__ == "__main__":
-    r = info("snort")
-    print("Name           : %s" % r.Name)
-    print("Version        : %s" % r.Version)
-    print("URL            : %s" % r.URL)
-    print("License        : %s" % r.License)
-    print("Category       : %s" % r.Category)
-    print("Maintainer     : %s" % r.Maintainer)
-    print("Description    : %s" % r.Description)
-    print("OutOfDate      : %s" % r.OutOfDate)
-    print("Votes          : %s" % r.NumVotes)
+    # r = info("pyccr-testing")
+    # print("Name         : %s" % r.Name)
+    # print("Version      : %s" % r.Version)
+    # print("URL          : %s" % r.URL)
+    # print("License      : %s" % r.License)
+    # print("Category     : %s" % r.Category)
+    # print("Maintainer   : %s" % r.Maintainer)
+    # print("Description  : %s" % r.Description)
+    # print("OutOfDate    : %s" % r.OutOfDate)
+    # print("Votes        : %s" % r.NumVotes)
+    # print("Screenshot   : %s" % r.Screenshot)
+
+    session = CCRSession(username, password)
+    # r = session.check_vote("pyccr-testing")
+    # print(r)
+    # session.adopt("pyccr-testing")
+    # session.disown("pyccr-testing")
+    # session.flag("pyccr-testing")
+    # session.unflag("pyccr-testing")
+    # session.notify("pyccr-testing")
+    # session.unnotify("pyccr-testing")
+    # session.vote("pyccr-testing")
+    # session.unvote("pyccr-testing")
+    # session.submit("pyccr-testing-0.0.1-3.src.tar.gz", "devel")
+    # session.setcategory("pyccr-testing", "devel")
+    # session.delete("pyccr-testing")
