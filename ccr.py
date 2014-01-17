@@ -418,10 +418,7 @@ class CCRSession(object):
         }
         response = self._session.post(CCR_PKG, data=data)
 
-        # FIXME: find a more stable check
-        if ("href='packages.php?O=2275&amp;PP=25&amp;SO=a'" in response.text) or (
-                "<option value='do_Adopt'" not in response.text) or (
-                info(package).MaintainerUID != 0):
+        if info(package).MaintainerUID != "0":
             raise _OwnershipWarning("Couldn't disown {}".format(package))
 
 
@@ -532,7 +529,7 @@ if __name__ == "__main__":
     # print("Votes        : %s" % r.NumVotes)
     # print("Screenshot   : %s" % r.Screenshot)
 
-    session = CCRSession(username, password)
+    session = CCRSession("X", "X")
     # r = session.check_vote("pyccr-testing")
     # print(r)
     # session.adopt("pyccr-testing")
