@@ -3,11 +3,10 @@
 from __future__ import print_function
 
 __all__ = ["getfileraw", "getpkgbuild",
-        "getpkgbuildraw", "getpkgurl", "geturl", "info",
-        "msearch", "search",
-        ]
+           "getpkgbuildraw", "getpkgurl", "geturl", "info",
+           "msearch", "search",
+]
 __version__ = 0.2
-
 
 import contextlib
 import requests
@@ -61,6 +60,7 @@ class _CategoryWarning(CCRWarning):
 
 class Struct(dict):
     """allows easy access to the parsed json - stolen from Inkane's paste.py"""
+
     def __getattr__(self, name):
         return self[name]
 
@@ -134,26 +134,26 @@ class CCRSession(object):
 
     def __init__(self, username, password, rememberme=False):
         self._cat2number = {
-                "none": 1,
-                "daemons": 2,
-                "devel": 3,
-                "editors": 4,
-                "emulators": 5,
-                "games": 6,
-                "gnome": 7,
-                "i18n": 8,
-                "kde": 9,
-                "lib": 10,
-                "modules": 11,
-                "multimedia": 12,
-                "network": 13,
-                "office": 14,
-                "educational": 15,
-                "system": 16,
-                "x11": 17,
-                "utils": 18,
-                "lib32": 19,
-                }
+            "none": 1,
+            "daemons": 2,
+            "devel": 3,
+            "editors": 4,
+            "emulators": 5,
+            "games": 6,
+            "gnome": 7,
+            "i18n": 8,
+            "kde": 9,
+            "lib": 10,
+            "modules": 11,
+            "multimedia": 12,
+            "network": 13,
+            "office": 14,
+            "educational": 15,
+            "system": 16,
+            "x11": 17,
+            "utils": 18,
+            "lib32": 19,
+        }
         self.username = username
         self._session = requests.session()
         remember_me = "off" if rememberme else "on"
@@ -186,7 +186,8 @@ class CCRSession(object):
     def check_vote(self, package, return_id=False):
         """check to see if you have already voted for a package
         raises a PackageNotFound exception if the package doesn't exist
-        raises a ConnectionError if a network error occur"""
+        raises a ConnectionError if a network error occur
+        """
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError): # AttributeError shouldn't occur
@@ -204,15 +205,17 @@ class CCRSession(object):
         """unvote a package on CCR
         raises a PackageNotFound exception if the package doesn't exist
         raises a ConnectionError if a network error occur
-        raises a _VoteWarning if it is already unvoted or if it couldn't unvote"""
+        raises a _VoteWarning if it is already unvoted or if it couldn't unvote
+        """
         # check_vote might raise PackageNotFound
         voted, id = self.check_vote(package, return_id=True)
         if not voted:
             raise _VoteWarning("Already unvoted or never voted!") # package didn't have a vote or never voted
 
-        data = {"IDs[%s]" % (id): 1,
-                "ID": id,
-                "do_UnVote": 1
+        data = {
+            "IDs[%s]" % (id): 1,
+            "ID": id,
+            "do_UnVote": 1
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -225,15 +228,17 @@ class CCRSession(object):
         """vote for a package on CCR
         raises a PackageNotFound if the package doesn't exist
         raises a ConnectionError if a network error occur
-        raises a _VoteWarning if it is already voted or if it couldn't vote"""
+        raises a _VoteWarning if it is already voted or if it couldn't vote
+        """
         # check_vote might raise PackageNotFound
         voted, ccrid = self.check_vote(package, return_id=True)
         if voted:
             raise _VoteWarning("Already voted!") # package is already voted
 
-        data = {"IDs[%s]" % (ccrid): 1,
-                "ID": ccrid,
-                "do_Vote": 1
+        data = {
+            "IDs[%s]" % (ccrid): 1,
+            "ID": ccrid,
+            "do_Vote": 1
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -246,15 +251,17 @@ class CCRSession(object):
         """flag a CCR package as out of date
         raises a ValueError if the package doesn't exist
         raises a ConnectionError if a network error occur
-        raises a _FlagWarning on failure"""
+        raises a _FlagWarning on failure
+        """
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
             raise PackageNotFound(package)
 
-        data = {"IDs[%s]" % (ccrid): 1,
-                "ID": ccrid,
-                "do_Flag": 1
+        data = {
+            "IDs[%s]" % (ccrid): 1,
+            "ID": ccrid,
+            "do_Flag": 1
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -266,19 +273,21 @@ class CCRSession(object):
         """unflag a CCR package as out of date
         raises a ValueError if the package doesn't exist
         raises a ConnectionError if a network error occur
-        raises a _FlagWarning on failure"""
+        raises a _FlagWarning on failure
+        """
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
             raise PackageNotFound(package)
 
-        data = {"IDs[%s]" % (ccrid): 1,
-                "ID": ccrid,
-                "do_UnFlag": 1
+        data = {
+            "IDs[%s]" % (ccrid): 1,
+            "ID": ccrid,
+            "do_UnFlag": 1
         }
         self._session.post(CCR_PKG, data=data)
 
-        if (info(package).OutOfDate == "1"):
+        if info(package).OutOfDate == "1":
             raise _FlagWarning("Couldn't remove flag".format(package))
 
 
@@ -286,23 +295,27 @@ class CCRSession(object):
         """delete a package from CCR
         raises ValueError if the package does not exist
         raises a ConnectionError if a network error occur
-        raises a _DeleteWarning on failure"""
+        raises a _DeleteWarning on failure
+        """
+        #FIXME Throw two exceptions if package doesn't exists
         try:
             pkginfo = info(package)
             ccrid = pkginfo.ID
         except (ValueError, AttributeError):
             raise ValueError(package)
 
-        data = {"IDs[%s]" % (ccrid): 1,
-                "ID": ccrid,
-                "do_Delete": 1,
-                "confirm_Delete": 0
+        data = {
+            "IDs[%s]" % (ccrid): 1,
+            "ID": ccrid,
+            "do_Delete": 1,
+            "confirm_Delete": 0
         }
         self._session.post(CCR_PKG, data=data)
 
         # test if the package still exists <==> delete wasn't succesful
         # FIXME use _getccr for a quicker check, avoiding the need to catch the exception
         try:
+            #FIXME Throw WARNING - Package couldn't be found
             info(package)
             raise _DeleteWarning("Couldn't delete {}".format(package))
         except PackageNotFound:
@@ -313,15 +326,17 @@ class CCRSession(object):
         """set the notify flag on a package
         raises ValueError if the package does not exist
         raises a ConnectionError if a network error occur
-        raises a _NotifyWarning on failure"""
+        raises a _NotifyWarning on failure
+        """
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
             raise ValueError(package)
 
-        data = {"IDs[%s]" % (ccrid): 1,
-                "ID": ccrid,
-                "do_Notify": 1
+        data = {
+            "IDs[%s]" % (ccrid): 1,
+            "ID": ccrid,
+            "do_Notify": 1
         }
         response = self._session.post(CCR_PKG, data=data)
 
@@ -334,15 +349,17 @@ class CCRSession(object):
         """unset the notify flag on a package
         raises ValueError if the package does not exist
         raises a ConnectionError if a network error occur
-        raises a _NotifyWarning on failure"""
+        raises a _NotifyWarning on failure
+        """
         try:
             ccrid = info(package).ID
         except (ValueError, AttributeError):
             raise ValueError(package)
 
-        data = {"IDs[%s]" % (ccrid): 1,
-                "ID": ccrid,
-                "do_UnNotify": 1
+        data = {
+            "IDs[%s]" % (ccrid): 1,
+            "ID": ccrid,
+            "do_UnNotify": 1
         }
         response = self._session.post(CCR_PKG, data=data)
 
@@ -354,7 +371,8 @@ class CCRSession(object):
         """adopt an orphaned CCR package
         raises ValueError if the package does not exist
         raises a ConnectionError if a network error occur
-        raises a _OwnershipWarning if the package is already maintained or if it fails"""
+        raises a _OwnershipWarning if the package is already maintained or if it fails
+        """
         try:
             pkginfo = info(package)
             ccrid = pkginfo.ID
@@ -365,9 +383,10 @@ class CCRSession(object):
             logging.warning("Warning: Adopting maintained package!")
             raise _OwnershipWarning("Couldn't adopt {} : already maintained.".format(package))
 
-        data = {"IDs[%s]" % (ccrid): 1,
-                "ID": ccrid,
-                "do_Adopt": 1
+        data = {
+            "IDs[%s]" % (ccrid): 1,
+            "ID": ccrid,
+            "do_Adopt": 1
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -377,30 +396,32 @@ class CCRSession(object):
             raise ValueError(package)
 
         if pkginfo.Maintainer != self.username:
-            raise _OwnershipWarning("Couldn't adopt {}".format(package))
+            raise _OwnershipWarning("You already own {}".format(package))
 
 
     def disown(self, package):
         """disown a CCR package
         raises ValueError if the package does not exist
         raises a ConnectionError if a network error occur
-        raises a _OwnershipWarning on failure"""
+        raises a _OwnershipWarning on failure
+        """
         try:
             pkginfo = info(package)
             ccrid = pkginfo.ID
         except (ValueError, AttributeError):
             raise ValueError(package)
 
-        data = {"IDs[%s]" % (ccrid): 1,
-                "ID": ccrid,
-                "do_Disown": 1
+        data = {
+            "IDs[%s]" % (ccrid): 1,
+            "ID": ccrid,
+            "do_Disown": 1
         }
         response = self._session.post(CCR_PKG, data=data)
 
         # FIXME: find a more stable check
         if ("href='packages.php?O=2275&amp;PP=25&amp;SO=a'" in response.text) or (
-            "<option value='do_Adopt'" not in response.text) or (
-            info(package).MaintainerUID != 0):
+                "<option value='do_Adopt'" not in response.text) or (
+                info(package).MaintainerUID != 0):
             raise _OwnershipWarning("Couldn't disown {}".format(package))
 
 
@@ -408,11 +429,13 @@ class CCRSession(object):
         """submit a package to CCR
         raises KeyError on bad category
         raises IOError [Errno 2] if 'f' does not exist
-        raises a ConnectionError if a network error occur"""
+        raises a ConnectionError if a network error occur
+        """
 
         error = re.compile(r"<span class='error'>(?P<message>.*)</span>")
-        data = {"pkgsubmit": 1,
-                "category": self._cat2number[category],
+        data = {
+            "pkgsubmit": 1,
+            "category": self._cat2number[category],
         }
         files = {'pfile': open(f, "rb")}
         response = self._session.post(CCR_SUBMIT, data=data, files=files)
@@ -428,7 +451,8 @@ class CCRSession(object):
         """change/set the category of a package already in the CCR
         raises ValueError if the package does not exist
         raises a requests.ConnectionError if a network error occur
-        raises _CategoryWarning for an invalid category or if it fails."""
+        raises _CategoryWarning for an invalid category or if it fails.
+        """
         try:
             pkginfo = info(package)
             ccrid = pkginfo.ID
@@ -436,8 +460,9 @@ class CCRSession(object):
             raise ValueError(package)
 
         try:
-            data = {"action": "do_ChangeCategory",
-                    "category_id": self._cat2number[category]
+            data = {
+                "action": "do_ChangeCategory",
+                "category_id": self._cat2number[category]
             }
         except KeyError:
             raise _CategoryWarning("Invalid category!")
