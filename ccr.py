@@ -173,7 +173,7 @@ class CCRSession(object):
     def __enter__(self):
         return self
 
-    def __exit__(self):
+    def __exit__(self, type, value, tb):
         self.close()
 
     def close(self):
