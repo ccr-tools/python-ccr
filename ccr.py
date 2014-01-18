@@ -5,7 +5,7 @@ from __future__ import print_function
 __all__ = ["getfileraw", "getpkgbuild",
            "getpkgbuildraw", "getpkgurl", "geturl", "info",
            "msearch", "search",
-]
+           ]
 __version__ = 0.2
 
 import contextlib
@@ -157,9 +157,10 @@ class CCRSession(object):
         self.username = username
         self._session = requests.session()
         remember_me = "off" if rememberme else "on"
-        data = {'user': username,
-                'passwd': password,
-                'remember_me': remember_me
+        data = {
+            'user': username,
+            'passwd': password,
+            'remember_me': remember_me
         }
 
         self._session.post(CCR_BASE, data=data)
@@ -169,19 +170,15 @@ class CCRSession(object):
                           "Please check if username and password are correct")
             raise ValueError(username, password)
 
-
     def __enter__(self):
         return self
 
-
-    def __exit__(self, type, value, tb):
+    def __exit__(self):
         self.close()
-
 
     def close(self):
         """end the session"""
         self._session.close()
-
 
     def check_vote(self, package, return_id=False):
         """check to see if you have already voted for a package
@@ -190,16 +187,15 @@ class CCRSession(object):
         """
         try:
             ccrid = info(package).ID
-        except (ValueError, AttributeError): # AttributeError shouldn't occur
+        except (ValueError, AttributeError):  # AttributeError shouldn't occur
             raise PackageNotFound(package)
 
         response = self._session.get(CCR_PKG + "?ID=" + ccrid)
 
         if "class='button' name='do_UnVote'" in response.text:
-            return ((True, ccrid) if return_id else True)
+            return (True, ccrid) if return_id else True
         else:
-            return ((False, ccrid) if return_id else False)
-
+            return (False, ccrid) if return_id else False
 
     def unvote(self, package):
         """unvote a package on CCR
@@ -208,13 +204,13 @@ class CCRSession(object):
         raises a _VoteWarning if it is already unvoted or if it couldn't unvote
         """
         # check_vote might raise PackageNotFound
-        voted, id = self.check_vote(package, return_id=True)
+        voted, ccrid = self.check_vote(package, return_id=True)
         if not voted:
-            raise _VoteWarning("Already unvoted or never voted!") # package didn't have a vote or never voted
+            raise _VoteWarning("Already unvoted or never voted!")  # package didn't have a vote or never voted
 
         data = {
-            "IDs[%s]" % (id): 1,
-            "ID": id,
+            "IDs[%s]" % ccrid: 1,
+            "ID": ccrid,
             "do_UnVote": 1
         }
         self._session.post(CCR_PKG, data=data)
@@ -222,7 +218,6 @@ class CCRSession(object):
         # check if the package is unvoted now
         if self.check_vote(package):
             raise _VoteWarning("Couldn't unvote {}".format(package))
-
 
     def vote(self, package):
         """vote for a package on CCR
@@ -233,10 +228,10 @@ class CCRSession(object):
         # check_vote might raise PackageNotFound
         voted, ccrid = self.check_vote(package, return_id=True)
         if voted:
-            raise _VoteWarning("Already voted!") # package is already voted
+            raise _VoteWarning("Already voted!")  # package is already voted
 
         data = {
-            "IDs[%s]" % (ccrid): 1,
+            "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
             "do_Vote": 1
         }
@@ -245,7 +240,6 @@ class CCRSession(object):
         # check if the package is voted now
         if not self.check_vote(package):
             raise _VoteWarning("Couldn't vote for {}".format(package))
-
 
     def flag(self, package):
         """flag a CCR package as out of date
@@ -259,7 +253,7 @@ class CCRSession(object):
             raise PackageNotFound(package)
 
         data = {
-            "IDs[%s]" % (ccrid): 1,
+            "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
             "do_Flag": 1
         }
@@ -267,7 +261,6 @@ class CCRSession(object):
 
         if info(package).OutOfDate == "0":
             raise _FlagWarning("Couldn't flag {} as out of date".format(package))
-
 
     def unflag(self, package):
         """unflag a CCR package as out of date
@@ -281,7 +274,7 @@ class CCRSession(object):
             raise PackageNotFound(package)
 
         data = {
-            "IDs[%s]" % (ccrid): 1,
+            "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
             "do_UnFlag": 1
         }
@@ -289,7 +282,6 @@ class CCRSession(object):
 
         if info(package).OutOfDate == "1":
             raise _FlagWarning("Couldn't remove flag".format(package))
-
 
     def delete(self, package):
         """delete a package from CCR
@@ -305,7 +297,7 @@ class CCRSession(object):
             raise ValueError(package)
 
         data = {
-            "IDs[%s]" % (ccrid): 1,
+            "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
             "do_Delete": 1,
             "confirm_Delete": 0
@@ -319,8 +311,7 @@ class CCRSession(object):
             info(package)
             raise _DeleteWarning("Couldn't delete {}".format(package))
         except PackageNotFound:
-            pass # everything works
-
+            pass  # everything works
 
     def notify(self, package):
         """set the notify flag on a package
@@ -334,7 +325,7 @@ class CCRSession(object):
             raise ValueError(package)
 
         data = {
-            "IDs[%s]" % (ccrid): 1,
+            "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
             "do_Notify": 1
         }
@@ -343,7 +334,6 @@ class CCRSession(object):
         # FIXME use a more stable check
         if "<option value='do_UnNotify'" not in response.text:
             raise _NotifyWarning(response)
-
 
     def unnotify(self, package):
         """unset the notify flag on a package
@@ -357,7 +347,7 @@ class CCRSession(object):
             raise ValueError(package)
 
         data = {
-            "IDs[%s]" % (ccrid): 1,
+            "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
             "do_UnNotify": 1
         }
@@ -365,7 +355,6 @@ class CCRSession(object):
 
         if "<option value='do_Notify'" not in response.text:
             raise _NotifyWarning(response)
-
 
     def adopt(self, package):
         """adopt an orphaned CCR package
@@ -384,7 +373,7 @@ class CCRSession(object):
             raise _OwnershipWarning("Couldn't adopt {} : already maintained.".format(package))
 
         data = {
-            "IDs[%s]" % (ccrid): 1,
+            "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
             "do_Adopt": 1
         }
@@ -392,12 +381,11 @@ class CCRSession(object):
 
         try:
             pkginfo = info(package)
-        except (ValueError):
+        except ValueError:
             raise ValueError(package)
 
         if pkginfo.Maintainer != self.username:
             raise _OwnershipWarning("You already own {}".format(package))
-
 
     def disown(self, package):
         """disown a CCR package
@@ -412,15 +400,14 @@ class CCRSession(object):
             raise ValueError(package)
 
         data = {
-            "IDs[%s]" % (ccrid): 1,
+            "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
             "do_Disown": 1
         }
-        response = self._session.post(CCR_PKG, data=data)
+        self._session.post(CCR_PKG, data=data)
 
         if info(package).MaintainerUID != "0":
             raise _OwnershipWarning("Couldn't disown {}".format(package))
-
 
     def submit(self, f, category):
         """submit a package to CCR
@@ -442,7 +429,6 @@ class CCRSession(object):
             raise InvalidPackage(error_message.groupdict()["message"])
         if "pkgbuild_view.php?p=" not in response.text:
             raise _SubmitWarning("Couldn't submit {}".format("package"))
-
 
     def setcategory(self, package, category):
         """change/set the category of a package already in the CCR
