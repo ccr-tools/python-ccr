@@ -518,7 +518,7 @@ if __name__ == "__main__":
 
     auth = CCRAuthFile()
     #auth.store_auth_info("X", "X")
-    session = CCRSession(auth.get_username(), auth.get_password())
+    session = CCRSession(auth.username, auth.password)
 
     #r = session.check_vote("pyccr-testing")
     #print(r)

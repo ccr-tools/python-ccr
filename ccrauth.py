@@ -7,20 +7,19 @@ import json
 
 class CCRAuth(object):
 
-    _username = None
-    _password = None
+    username = None
+    password = None
 
-    def get_username(self):
-        """ get the username
+    def _set_info(self, username, password):
+        """ set the username and password
         """
-        return self._username
-
-    def get_password(self):
-        """ get the password
-        """
-        return self._password
+        self.username = username
+        self.password = password
 
     def store_auth_info(self, username, password):
+        """ store authentication information
+            reimplmented in child classes
+        """
         pass
 
 
@@ -35,8 +34,7 @@ class CCRAuthFile(CCRAuth):
         try:
             with open('ccrauth.txt') as rfile:
                 data = json.load(rfile)
-                self._username = data['username']
-                self._password = data['password']
+            self._set_info(data['username'], data['password'])
         except IOError:
             pass
 
@@ -52,6 +50,7 @@ class CCRAuthFile(CCRAuth):
         try:
             with open('ccrauth.txt', 'w') as wfile:
                 json.dump(data, wfile)
+            self._set_info(data['username'], data['password'])
         except IOError:
             raise
 
