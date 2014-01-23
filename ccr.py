@@ -516,8 +516,10 @@ if __name__ == "__main__":
     #print("Votes        : %s" % r.NumVotes)
     #print("Screenshot   : %s" % r.Screenshot)
 
-    auth = CCRAuthFile()
-    #auth.store_auth_info("X", "X")
+    #auth = CCRAuthFile()
+    auth = CCRAuthSQLite()
+    #auth = CCRAuthKWallet()
+    #auth.store_auth_info("anon", "ymous")
     session = CCRSession(auth.username, auth.password)
 
     #r = session.check_vote("pyccr-testing")
