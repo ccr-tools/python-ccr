@@ -38,12 +38,9 @@ class CCRAuthFile(CCRAuth):
             with open('ccrauth.txt') as rfile:
                 data = json.load(rfile)
         except IOError:
-            raise
+            return
 
-        try:
-            self._set_info(data['username'], data['password'])
-        except ValueError:
-            raise
+        self._set_info(data['username'], data['password'])
 
     def store_auth_info(self, username, password):
         """ store authentication information in a file
@@ -54,17 +51,13 @@ class CCRAuthFile(CCRAuth):
             "username": username,
             "password": password
         }
-
         try:
             with open('ccrauth.txt', 'w') as wfile:
                 json.dump(data, wfile)
         except IOError:
             raise
 
-        try:
-            self._set_info(username, password)
-        except ValueError:
-            raise
+        self._set_info(username, password)
 
 
 class CCRAuthSQLite(CCRAuth):
@@ -81,8 +74,7 @@ class CCRAuthSQLite(CCRAuth):
         conn = sqlite3.connect('ccr.db')
         cur = conn.cursor()
         cur.execute("SELECT * FROM sqlite_master WHERE type='table' AND name='auth';")
-
-        if cur.fetchone()[1] == "auth":
+        if cur.fetchone() is not None:
             cur.execute("SELECT username, password FROM auth;")
             data = cur.fetchone()
             self._set_info(data[0], data[1])
@@ -93,18 +85,13 @@ class CCRAuthSQLite(CCRAuth):
         """ store authentication information in the database
         """
         #  TODO exceptions
-        #  TODO modify data instead of inserting new row
         conn = sqlite3.connect('ccr.db')
         cur = conn.cursor()
-        cur.execute("CREATE TABLE auth(username TEXT, password TEXT)")
-        cur.execute("INSERT INTO auth VALUES (?,?)", (username, password))
+        cur.execute("CREATE TABLE IF NOT EXISTS auth (id INTEGER PRIMARY KEY, username TEXT, password TEXT)")
+        cur.execute("INSERT OR REPLACE INTO auth (id, username, password) VALUES (0,?,?)", (username, password))
         conn.commit()
         conn.close()
-
-        try:
-            self._set_info(username, password)
-        except ValueError:
-            raise
+        self._set_info(username, password)
 
 
 class CCRAuthKWallet(CCRAuth):
