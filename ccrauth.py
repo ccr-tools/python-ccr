@@ -5,7 +5,7 @@ __all__ = ["CCRAuthFile", "CCRAuthSQLite", "CCRAuthKWallet"]
 import json
 import sqlite3
 import logging
-from PyKDE4.kdeui import KWallet  # TODO PyKDE4 in requirements.txt
+from PyKDE4.kdeui import KWallet
 
 
 class CCRAuth(object):
