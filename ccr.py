@@ -1,10 +1,10 @@
-#!/usr/bin/python3
 """A simple Python lib to access the Chakra Community Repository"""
+
 from __future__ import print_function
 
 __all__ = ["getfileraw", "getpkgbuild",
            "getpkgbuildraw", "getpkgurl", "geturl", "info",
-           "msearch", "search",
+           "msearch", "search", "CCRSession",
            ]
 __version__ = 0.2
 
@@ -14,7 +14,6 @@ import urllib.parse
 import json
 import re
 import logging
-from ccrauth import *
 
 logging.basicConfig(level=logging.DEBUG, format='>> %(levelname)s - %(message)s')
 
@@ -501,37 +500,3 @@ def getfileraw(package, f):
     path = "packages/" + package[:2] + "/" + package + "/" + package + "/"
     url = CCR_BASE + path + f
     return url
-
-
-if __name__ == "__main__":
-    #r = info("pyccr-testing")
-    #print("Name         : %s" % r.Name)
-    #print("Version      : %s" % r.Version)
-    #print("URL          : %s" % r.URL)
-    #print("License      : %s" % r.License)
-    #print("Category     : %s" % r.Category)
-    #print("Maintainer   : %s" % r.Maintainer)
-    #print("Description  : %s" % r.Description)
-    #print("OutOfDate    : %s" % r.OutOfDate)
-    #print("Votes        : %s" % r.NumVotes)
-    #print("Screenshot   : %s" % r.Screenshot)
-
-    #auth = CCRAuthFile()
-    #auth = CCRAuthSQLite()
-    auth = CCRAuthKWallet()
-    auth.store_auth_info("anon1", "ymous4")
-    session = CCRSession(auth.username, auth.password)
-
-    #r = session.check_vote("pyccr-testing")
-    #print(r)
-    #session.adopt("pyccr-testing")
-    #session.disown("pyccr-testing")
-    #session.flag("pyccr-testing")
-    #session.unflag("pyccr-testing")
-    #session.notify("pyccr-testing")
-    #session.unnotify("pyccr-testing")
-    #session.vote("pyccr-testing")
-    #session.unvote("pyccr-testing")
-    #session.submit("pyccr-testing-0.0.1-3.src.tar.gz", "devel")
-    #session.setcategory("pyccr-testing", "devel")
-    #session.delete("pyccr-testing")
