@@ -1,0 +1,2 @@
+requests>=2.0.1
+# TODO put a note in the readme/pypi page that says to use pykde if you want kwallet feature
