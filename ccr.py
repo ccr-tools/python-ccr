@@ -2,10 +2,9 @@
 
 from __future__ import print_function
 
-__all__ = ["getfileraw", "getpkgbuild",
-           "getpkgbuildraw", "getpkgurl", "geturl", "info",
-           "msearch", "search", "CCRSession",
-           ]
+__all__ = ["search", "info", "msearch", "list_orphans",
+           "getlatest", "geturl", "getpkgurl", "getpkgbuild",
+           "getpkgbuildraw", "getfileraw", "CCRSession"]
 __version__ = 0.2
 
 import contextlib
@@ -16,6 +15,17 @@ import re
 import logging
 
 logging.basicConfig(level=logging.DEBUG, format='>> %(levelname)s - %(message)s')
+
+
+CCR_BASE = "http://chakra-project.org/ccr/"
+CCR_RPC = CCR_BASE + "rpc.php?type="
+CCR_PKG = CCR_BASE + "packages.php"
+CCR_SUBMIT = CCR_BASE + "pkgsubmit.php"
+ARG = "&arg="
+SEARCH = "search"
+INFO = "info"
+MSEARCH = "msearch"
+LATEST = "getlatest"
 
 
 class InvalidPackage(TypeError):
@@ -69,63 +79,6 @@ class Struct(dict):
 
     def __delattr__(self, name):
         del self[name]
-
-
-CCR_BASE = "http://chakra-project.org/ccr/"
-CCR_RPC = CCR_BASE + "rpc.php?type="
-CCR_PKG = CCR_BASE + "packages.php"
-CCR_SUBMIT = CCR_BASE + "pkgsubmit.php"
-ARG = "&arg="
-SEARCH = "search"
-INFO = "info"
-MSEARCH = "msearch"
-LATEST = "getlatest"
-
-
-# CCR searching and info
-def _get_ccr_json(method, arg):
-    """returns the parsed json - for internal use only"""
-    # arg must must be quoted to allow input like 'ls++-git'
-    arg = urllib.parse.quote(arg)
-    with contextlib.closing(requests.get(CCR_RPC + method + ARG + arg)) as results:
-        return json.loads(results.text, object_hook=Struct)
-
-
-def search(keywords):
-    """search for some keywords - returns results as a list"""
-    results = _get_ccr_json(SEARCH, keywords)
-    try:
-        return results.results
-    except AttributeError:
-        logging.debug("Nothing could be found.")
-        raise ValueError(results)
-
-
-def info(package):
-    """get information for a specific package - returns results as a list"""
-    results = _get_ccr_json(INFO, package)
-    try:
-        if results.results == u'No result found':
-            logging.warning("Package couldn't be found")
-            raise PackageNotFound("Package {} couldn't be found".format(package))
-        return results.results
-    except AttributeError:
-        logging.warning("Package couldn't be found")
-        raise PackageNotFound((package, results))
-
-
-def msearch(maintainer):
-    """search for packages owned by 'maintainer' - returns results as a list"""
-    results = _get_ccr_json(MSEARCH, maintainer)
-    try:
-        return results.results
-    except AttributeError:
-        raise ValueError((maintainer, results))
-
-
-def list_orphans():
-    """search for orphaned packages - returns results as a list"""
-    return msearch("0")
 
 
 # CCR actions
@@ -457,6 +410,52 @@ class CCRSession(object):
         checkstr = "selected='selected'>" + category + "</option>"
         if checkstr not in response.text:
             raise _CategoryWarning(response.text)
+
+
+# CCR searching and info
+def _get_ccr_json(method, arg):
+    """returns the parsed json - for internal use only"""
+    # arg must must be quoted to allow input like 'ls++-git'
+    arg = urllib.parse.quote(arg)
+    with contextlib.closing(requests.get(CCR_RPC + method + ARG + arg)) as results:
+        return json.loads(results.text, object_hook=Struct)
+
+
+def search(keywords):
+    """search for some keywords - returns results as a list"""
+    results = _get_ccr_json(SEARCH, keywords)
+    try:
+        return results.results
+    except AttributeError:
+        logging.debug("Nothing could be found.")
+        raise ValueError(results)
+
+
+def info(package):
+    """get information for a specific package - returns results as a list"""
+    results = _get_ccr_json(INFO, package)
+    try:
+        if results.results == u'No result found':
+            logging.warning("Package couldn't be found")
+            raise PackageNotFound("Package {} couldn't be found".format(package))
+        return results.results
+    except AttributeError:
+        logging.warning("Package couldn't be found")
+        raise PackageNotFound((package, results))
+
+
+def msearch(maintainer):
+    """search for packages owned by 'maintainer' - returns results as a list"""
+    results = _get_ccr_json(MSEARCH, maintainer)
+    try:
+        return results.results
+    except AttributeError:
+        raise ValueError((maintainer, results))
+
+
+def list_orphans():
+    """search for orphaned packages - returns results as a list"""
+    return msearch("0")
 
 
 # Other
