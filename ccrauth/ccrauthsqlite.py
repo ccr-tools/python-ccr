@@ -1,8 +1,8 @@
 """A class to manage authentication information in a database (ccr.db)"""
 
-from ccrauth import CCRAuth
 import sqlite3
 import logging
+from ccrauth.ccrauth import CCRAuth
 
 
 class CCRAuthSQLite(CCRAuth):

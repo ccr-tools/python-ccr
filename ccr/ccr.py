@@ -2,11 +2,6 @@
 
 from __future__ import print_function
 
-__all__ = ["search", "info", "msearch", "list_orphans",
-           "getlatest", "geturl", "getpkgurl", "getpkgbuild",
-           "getpkgbuildraw", "getfileraw", "CCRSession"]
-__version__ = 0.2
-
 import contextlib
 import requests
 import urllib.parse

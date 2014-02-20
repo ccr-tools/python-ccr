@@ -1,8 +1,8 @@
 """A class to manage authentication information in a file (ccrauth.txt)"""
 
-from ccrauth import CCRAuth
 import json
 import logging
+from ccrauth.ccrauth import CCRAuth
 
 
 class CCRAuthFile(CCRAuth):
