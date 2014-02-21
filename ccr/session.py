@@ -1,16 +1,11 @@
 import requests
 import re
 import logging
-from ccr import *
+from ccr.ccr import *
 
-__all__ = ["CCRSession"]
+__all__ = ["Session"]
 
 logging.basicConfig(level=logging.DEBUG, format='>> %(levelname)s - %(message)s')
-
-CCR_BASE = "http://chakra-project.org/ccr/"
-CCR_RPC = CCR_BASE + "rpc.php?type="
-CCR_PKG = CCR_BASE + "packages.php"
-CCR_SUBMIT = CCR_BASE + "pkgsubmit.php"
 
 
 class PackageNotFound(ValueError):

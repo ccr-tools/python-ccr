@@ -2,6 +2,12 @@
 
 from __future__ import print_function
 
+__all__ = ["search", "info", "msearch", "list_orphans",
+           "getlatest", "geturl", "getpkgurl", "getpkgbuild",
+           "getpkgbuildraw", "getfileraw",
+           "CCR_BASE", "CCR_RPC", "CCR_PKG", "CCR_SUBMIT"
+           ]
+
 import contextlib
 import requests
 import urllib.parse

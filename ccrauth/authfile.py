@@ -5,7 +5,7 @@ import logging
 from ccrauth.ccrauth import CCRAuth
 
 
-class File(CCRAuth):
+class AuthFile(CCRAuth):
 
     def __init__(self):
         """ define username and password if the file exists

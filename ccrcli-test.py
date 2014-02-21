@@ -1,7 +1,7 @@
 from ccr import *
-#from ccrauth import File
-#from ccrauth import SQLite
-from ccrauth import KWallet
+#from ccrauth import AuthFile
+#from ccrauth import AuthSQLite
+from ccrauth import AuthKWallet
 
 
 if __name__ == "__main__":
@@ -18,9 +18,9 @@ if __name__ == "__main__":
     # print("Votes        : %s" % r.NumVotes)
     # print("Screenshot   : %s" % r.Screenshot)
 
-    #auth = CCRAuthFile()
-    #auth = CCRAuthSQLite()
-    auth = KWallet()
+    #auth = AuthFile()
+    #auth = AuthSQLite()
+    auth = AuthKWallet()
     auth.store_auth_info("anon1", "ymous4")
     session = Session(auth.username, auth.password)
 
