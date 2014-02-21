@@ -1,12 +1,12 @@
-from ccr.ccr import *
-#from ccrauth.ccrauthfile import *
-#from ccrauth.ccrauthsqlite import *
-from ccrauth.ccrauthkwallet import *
+from ccr import *
+#from ccrauth import File
+#from ccrauth import SQLite
+from ccrauth import KWallet
 
 
 if __name__ == "__main__":
 
-    #r = info("pyccr-testing")
+    r = info("pyccr-testing")
     # print("Name         : %s" % r.Name)
     # print("Version      : %s" % r.Version)
     # print("URL          : %s" % r.URL)
@@ -20,9 +20,9 @@ if __name__ == "__main__":
 
     #auth = CCRAuthFile()
     #auth = CCRAuthSQLite()
-    auth = CCRAuthKWallet()
+    auth = KWallet()
     auth.store_auth_info("anon1", "ymous4")
-    session = CCRSession(auth.username, auth.password)
+    session = Session(auth.username, auth.password)
 
     #r = session.check_vote("pyccr-testing")
     #print(r)

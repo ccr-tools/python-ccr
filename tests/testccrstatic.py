@@ -1,6 +1,6 @@
 import inspect
 import unittest
-from ccr import ccr
+from ccr import *
 
 
 class TestCCRStatic(unittest.TestCase):
@@ -25,51 +25,51 @@ class TestCCRStatic(unittest.TestCase):
 
     def test_search(self):
         for packagename in self.KNOWN_VALUES:
-            results = ccr.search(packagename)
+            results = search(packagename)
             self.assertGreaterEqual(len(results), 1)
 
     def test_info(self):
         for packagename in self.KNOWN_VALUES:
-            results = ccr.info(packagename)
+            results = info(packagename)
             self.assertEqual(results.Name, packagename)
 
     def test_msearch(self):
-        results = ccr.msearch(self.MAINTAINER)
+        results = msearch(self.MAINTAINER)
         self.assertGreaterEqual(len(results), 1)
 
     def test_list_orphans(self):
-        results = ccr.list_orphans()
+        results = list_orphans()
         self.assertGreaterEqual(len(results), 1)
 
     # Other
     def test_getlatest(self):
-        results = ccr.getlatest()
+        results = getlatest()
         self.assertEqual(len(results.results), 10)
 
     def test_geturl(self):
         for packagename in self.KNOWN_VALUES:
-            result = ccr.geturl(packagename)
-            self.assertEqual(result, ccr.CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
+            result = geturl(packagename)
+            self.assertEqual(result, CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
 
     def test_getpkgurl(self):
         for packagename in self.KNOWN_VALUES:
-            result = ccr.getpkgurl(packagename)
-            self.assertEqual(result, ccr.CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
+            result = getpkgurl(packagename)
+            self.assertEqual(result, CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
 
     def test_getpkgbuild(self):
         for packagename in self.KNOWN_VALUES:
-            result = ccr.getpkgbuild(packagename)
-            self.assertEqual(result, ccr.CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
+            result = getpkgbuild(packagename)
+            self.assertEqual(result, CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
 
     def test_getpkgbuildraw(self):
         for packagename in self.KNOWN_VALUES:
-            result = ccr.getpkgbuildraw(packagename)
-            self.assertEqual(result, ccr.CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
+            result = getpkgbuildraw(packagename)
+            self.assertEqual(result, CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
 
     def test_getfileraw(self):
         for packagename in self.KNOWN_VALUES:
-            result = ccr.getfileraw(packagename, "test.raw")
-            self.assertEqual(result, ccr.CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
+            result = getfileraw(packagename, "test.raw")
+            self.assertEqual(result, CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
 
 
 if __name__ == '__main__':

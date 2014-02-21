@@ -5,7 +5,7 @@ from PyKDE4.kdeui import KWallet
 from ccrauth.ccrauth import CCRAuth
 
 
-class CCRAuthKWallet(CCRAuth):
+class KWallet(CCRAuth):
 
     def __init__(self):
         """ define username and password if it exists in KWallet
