@@ -6,18 +6,6 @@ from ccrauth import AuthKWallet
 
 if __name__ == "__main__":
 
-    r = info("pyccr-testing")
-    # print("Name         : %s" % r.Name)
-    # print("Version      : %s" % r.Version)
-    # print("URL          : %s" % r.URL)
-    # print("License      : %s" % r.License)
-    # print("Category     : %s" % r.Category)
-    # print("Maintainer   : %s" % r.Maintainer)
-    # print("Description  : %s" % r.Description)
-    # print("OutOfDate    : %s" % r.OutOfDate)
-    # print("Votes        : %s" % r.NumVotes)
-    # print("Screenshot   : %s" % r.Screenshot)
-
     #auth = AuthFile()
     #auth = AuthSQLite()
     auth = AuthKWallet()

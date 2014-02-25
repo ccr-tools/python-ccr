@@ -5,7 +5,7 @@ from __future__ import print_function
 __all__ = ["search", "info", "msearch", "list_orphans",
            "getlatest", "geturl", "getpkgurl", "getpkgbuild",
            "getpkgbuildraw", "getfileraw",
-           "CCR_BASE", "CCR_RPC", "CCR_PKG", "CCR_SUBMIT"
+           "CCR_BASE", "CCR_RPC", "CCR_PKG", "CCR_SUBMIT",
            ]
 
 import contextlib
@@ -90,7 +90,6 @@ def list_orphans():
     return msearch("0")
 
 
-# Other
 def getlatest(num=10):
     """get the info for the latest num CCR packages, returns as a list"""
     return _get_ccr_json(LATEST, str(num))

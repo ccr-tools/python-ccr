@@ -71,7 +71,7 @@ class Session(object):
             "system": 16,
             "x11": 17,
             "utils": 18,
-            "lib32": 19
+            "lib32": 19,
         }
         self._username = username
         self._session = requests.session()
@@ -79,7 +79,7 @@ class Session(object):
         data = {
             'user': username,
             'passwd': password,
-            'remember_me': remember_me
+            'remember_me': remember_me,
         }
 
         self._session.post(CCR_BASE, data=data)
@@ -130,7 +130,7 @@ class Session(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_UnVote": 1
+            "do_UnVote": 1,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -152,7 +152,7 @@ class Session(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_Vote": 1
+            "do_Vote": 1,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -174,7 +174,7 @@ class Session(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_Flag": 1
+            "do_Flag": 1,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -195,7 +195,7 @@ class Session(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_UnFlag": 1
+            "do_UnFlag": 1,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -219,7 +219,7 @@ class Session(object):
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
             "do_Delete": 1,
-            "confirm_Delete": 0
+            "confirm_Delete": 0,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -246,7 +246,7 @@ class Session(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_Notify": 1
+            "do_Notify": 1,
         }
         response = self._session.post(CCR_PKG, data=data)
 
@@ -268,7 +268,7 @@ class Session(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_UnNotify": 1
+            "do_UnNotify": 1,
         }
         response = self._session.post(CCR_PKG, data=data)
 
@@ -294,7 +294,7 @@ class Session(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_Adopt": 1
+            "do_Adopt": 1,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -321,7 +321,7 @@ class Session(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_Disown": 1
+            "do_Disown": 1,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -338,7 +338,7 @@ class Session(object):
         error = re.compile(r"<span class='error'>(?P<message>.*)</span>")
         data = {
             "pkgsubmit": 1,
-            "category": self._cat2number[category]
+            "category": self._cat2number[category],
         }
         files = {'pfile': open(f, "rb")}
         response = self._session.post(CCR_SUBMIT, data=data, files=files)
@@ -364,7 +364,7 @@ class Session(object):
         try:
             data = {
                 "action": "do_ChangeCategory",
-                "category_id": self._cat2number[category]
+                "category_id": self._cat2number[category],
             }
         except KeyError:
             raise _CategoryWarning("Invalid category!")

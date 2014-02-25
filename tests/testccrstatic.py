@@ -12,15 +12,15 @@ class TestCCRStatic(unittest.TestCase):
             "test_getpkgurl": "packages/cd/cdrtools/cdrtools.tar.gz",
             "test_getpkgbuild": "pkgbuild_view.php?p=cdrtools",
             "test_getpkgbuildraw": "packages/cd/cdrtools/cdrtools/PKGBUILD",
-            "test_getfileraw": "packages/cd/cdrtools/cdrtools/test.raw"
+            "test_getfileraw": "packages/cd/cdrtools/cdrtools/test.raw",
         },
         "ls++-git": {
             "test_geturl": "packages.php?ID=3870",
             "test_getpkgurl": "packages/ls/ls++-git/ls++-git.tar.gz",
             "test_getpkgbuild": "pkgbuild_view.php?p=ls++-git",
             "test_getpkgbuildraw": "packages/ls/ls++-git/ls++-git/PKGBUILD",
-            "test_getfileraw": "packages/ls/ls++-git/ls++-git/test.raw"
-        }
+            "test_getfileraw": "packages/ls/ls++-git/ls++-git/test.raw",
+        },
     }
 
     def test_search(self):

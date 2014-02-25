@@ -28,7 +28,7 @@ class AuthFile(CCRAuth):
         """
         data = {
             "username": username,
-            "password": password
+            "password": password,
         }
         try:
             with open('ccrauth.txt', 'w') as wfile:
