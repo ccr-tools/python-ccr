@@ -1,29 +1,16 @@
-#!/usr/bin/python3
-
 from ccr import *
-from ccrauthfile import CCRAuthFile
-from ccrauthsqlite import CCRAuthSQLite
-from ccrauthkwallet import CCRAuthKWallet
+#from ccrauth import AuthFile
+#from ccrauth import AuthSQLite
+from ccrauth import AuthKWallet
+
 
 if __name__ == "__main__":
 
-    r = info("pyccr-testing")
-    print("Name         : %s" % r.Name)
-    print("Version      : %s" % r.Version)
-    print("URL          : %s" % r.URL)
-    print("License      : %s" % r.License)
-    print("Category     : %s" % r.Category)
-    print("Maintainer   : %s" % r.Maintainer)
-    print("Description  : %s" % r.Description)
-    print("OutOfDate    : %s" % r.OutOfDate)
-    print("Votes        : %s" % r.NumVotes)
-    print("Screenshot   : %s" % r.Screenshot)
-
-    auth = CCRAuthFile()
-    #auth = CCRAuthSQLite()
-    #auth = CCRAuthKWallet()
+    #auth = AuthFile()
+    #auth = AuthSQLite()
+    auth = AuthKWallet()
     auth.store_auth_info("anon1", "ymous4")
-    session = CCRSession(auth.username, auth.password)
+    session = Session(auth.username, auth.password)
 
     #r = session.check_vote("pyccr-testing")
     #print(r)

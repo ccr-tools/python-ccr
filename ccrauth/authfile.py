@@ -1,11 +1,11 @@
 """A class to manage authentication information in a file (ccrauth.txt)"""
 
-from ccrauth import CCRAuth
 import json
 import logging
+from ccrauth.ccrauth import CCRAuth
 
 
-class CCRAuthFile(CCRAuth):
+class AuthFile(CCRAuth):
 
     def __init__(self):
         """ define username and password if the file exists
@@ -28,7 +28,7 @@ class CCRAuthFile(CCRAuth):
         """
         data = {
             "username": username,
-            "password": password
+            "password": password,
         }
         try:
             with open('ccrauth.txt', 'w') as wfile:

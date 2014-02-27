@@ -1,11 +1,11 @@
 """ A class to manage authentication information in KWallet"""
 
-from ccrauth import CCRAuth
-from PyKDE4.kdeui import KWallet
 import logging
+from PyKDE4.kdeui import KWallet
+from ccrauth.ccrauth import CCRAuth
 
 
-class CCRAuthKWallet(CCRAuth):
+class AuthKWallet(CCRAuth):
 
     def __init__(self):
         """ define username and password if it exists in KWallet

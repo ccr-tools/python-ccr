@@ -15,6 +15,6 @@ class CCRAuth(object):
 
     def store_auth_info(self, username, password):
         """ store authentication information
-        reimplemented in CCRAuthFile, CCRAuthSQLite and CCRAuthKWallet classes
+        reimplemented in AuthFile, AuthSQLite and AuthKWallet classes
         """
         raise NotImplementedError

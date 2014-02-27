@@ -1,29 +1,19 @@
-"""A simple Python lib to access the Chakra Community Repository"""
-
-from __future__ import print_function
-
-__all__ = ["getfileraw", "getpkgbuild",
-           "getpkgbuildraw", "getpkgurl", "geturl", "info",
-           "msearch", "search", "CCRSession",
-           ]
-__version__ = 0.2
-
-import contextlib
 import requests
-import urllib.parse
-import json
 import re
 import logging
+from ccr.ccr import *
+
+__all__ = ["Session"]
 
 logging.basicConfig(level=logging.DEBUG, format='>> %(levelname)s - %(message)s')
 
 
-class InvalidPackage(TypeError):
-    """Invalid package or wrong file type"""
-
-
 class PackageNotFound(ValueError):
     """Package does not exit"""
+
+
+class InvalidPackage(TypeError):
+    """Invalid package or wrong file type"""
 
 
 class CCRWarning(Warning):
@@ -58,78 +48,7 @@ class _CategoryWarning(CCRWarning):
     """Setting the category failed"""
 
 
-class Struct(dict):
-    """allows easy access to the parsed json - stolen from Inkane's paste.py"""
-
-    def __getattr__(self, name):
-        return self[name]
-
-    def __setattr__(self, name, value):
-        self[name] = value
-
-    def __delattr__(self, name):
-        del self[name]
-
-
-CCR_BASE = "http://chakra-project.org/ccr/"
-CCR_RPC = CCR_BASE + "rpc.php?type="
-CCR_PKG = CCR_BASE + "packages.php"
-CCR_SUBMIT = CCR_BASE + "pkgsubmit.php"
-ARG = "&arg="
-SEARCH = "search"
-INFO = "info"
-MSEARCH = "msearch"
-LATEST = "getlatest"
-
-
-# CCR searching and info
-def _get_ccr_json(method, arg):
-    """returns the parsed json - for internal use only"""
-    # arg must must be quoted to allow input like 'ls++-git'
-    arg = urllib.parse.quote(arg)
-    with contextlib.closing(requests.get(CCR_RPC + method + ARG + arg)) as results:
-        return json.loads(results.text, object_hook=Struct)
-
-
-def search(keywords):
-    """search for some keywords - returns results as a list"""
-    results = _get_ccr_json(SEARCH, keywords)
-    try:
-        return results.results
-    except AttributeError:
-        logging.debug("Nothing could be found.")
-        raise ValueError(results)
-
-
-def info(package):
-    """get information for a specific package - returns results as a list"""
-    results = _get_ccr_json(INFO, package)
-    try:
-        if results.results == u'No result found':
-            logging.warning("Package couldn't be found")
-            raise PackageNotFound("Package {} couldn't be found".format(package))
-        return results.results
-    except AttributeError:
-        logging.warning("Package couldn't be found")
-        raise PackageNotFound((package, results))
-
-
-def msearch(maintainer):
-    """search for packages owned by 'maintainer' - returns results as a list"""
-    results = _get_ccr_json(MSEARCH, maintainer)
-    try:
-        return results.results
-    except AttributeError:
-        raise ValueError((maintainer, results))
-
-
-def list_orphans():
-    """search for orphaned packages - returns results as a list"""
-    return msearch("0")
-
-
-# CCR actions
-class CCRSession(object):
+class Session(object):
     """class for all CCR actions """
 
     def __init__(self, username, password, rememberme=False):
@@ -160,7 +79,7 @@ class CCRSession(object):
         data = {
             'user': username,
             'passwd': password,
-            'remember_me': remember_me
+            'remember_me': remember_me,
         }
 
         self._session.post(CCR_BASE, data=data)
@@ -211,7 +130,7 @@ class CCRSession(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_UnVote": 1
+            "do_UnVote": 1,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -233,7 +152,7 @@ class CCRSession(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_Vote": 1
+            "do_Vote": 1,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -255,7 +174,7 @@ class CCRSession(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_Flag": 1
+            "do_Flag": 1,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -276,7 +195,7 @@ class CCRSession(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_UnFlag": 1
+            "do_UnFlag": 1,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -300,7 +219,7 @@ class CCRSession(object):
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
             "do_Delete": 1,
-            "confirm_Delete": 0
+            "confirm_Delete": 0,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -327,7 +246,7 @@ class CCRSession(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_Notify": 1
+            "do_Notify": 1,
         }
         response = self._session.post(CCR_PKG, data=data)
 
@@ -349,7 +268,7 @@ class CCRSession(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_UnNotify": 1
+            "do_UnNotify": 1,
         }
         response = self._session.post(CCR_PKG, data=data)
 
@@ -375,7 +294,7 @@ class CCRSession(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_Adopt": 1
+            "do_Adopt": 1,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -402,7 +321,7 @@ class CCRSession(object):
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
-            "do_Disown": 1
+            "do_Disown": 1,
         }
         self._session.post(CCR_PKG, data=data)
 
@@ -445,7 +364,7 @@ class CCRSession(object):
         try:
             data = {
                 "action": "do_ChangeCategory",
-                "category_id": self._cat2number[category]
+                "category_id": self._cat2number[category],
             }
         except KeyError:
             raise _CategoryWarning("Invalid category!")
@@ -457,46 +376,3 @@ class CCRSession(object):
         checkstr = "selected='selected'>" + category + "</option>"
         if checkstr not in response.text:
             raise _CategoryWarning(response.text)
-
-
-# Other
-def getlatest(num=10):
-    """get the info for the latest num CCR packages, returns as a list"""
-    return _get_ccr_json(LATEST, str(num))
-
-
-def geturl(package):
-    """get the URL of the package's CCR page"""
-    try:
-        ccrid = info(package).ID
-    except AttributeError:
-        raise ValueError(package)
-    url = CCR_PKG + "?ID=" + ccrid
-    return url
-
-
-def getpkgurl(package):
-    """get the url to the source package"""
-    path = "packages/" + package[:2] + "/" + package + "/"
-    url = CCR_BASE + path + package + ".tar.gz"
-    return url
-
-
-def getpkgbuild(package):
-    """get the url to the online PKGBUILD viewer"""
-    url = CCR_BASE + "pkgbuild_view.php?p=" + package
-    return url
-
-
-def getpkgbuildraw(package):
-    """get the url to the actual PKGBUILD"""
-    path = "packages/" + package[:2] + "/" + package + "/" + package + "/"
-    url = CCR_BASE + path + "PKGBUILD"
-    return url
-
-
-def getfileraw(package, f):
-    """get the url to an arbitrary file f, like a .install"""
-    path = "packages/" + package[:2] + "/" + package + "/" + package + "/"
-    url = CCR_BASE + path + f
-    return url
