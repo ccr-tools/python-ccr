@@ -1,11 +1,10 @@
-"""A class to manage authentication information in a database (ccr.db)"""
-
 import sqlite3
 import logging
 from ccrauth.ccrauth import CCRAuth
 
 
 class AuthSQLite(CCRAuth):
+    """A class to manage authentication information in a database (ccr.db)"""
 
     def __init__(self):
         """ define username and password if the table auth exists
