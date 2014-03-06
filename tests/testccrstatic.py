@@ -41,7 +41,6 @@ class TestCCRStatic(unittest.TestCase):
         results = list_orphans()
         self.assertGreaterEqual(len(results), 1)
 
-    # Other
     def test_getlatest(self):
         results = getlatest()
         self.assertEqual(len(results.results), 10)
@@ -70,7 +69,3 @@ class TestCCRStatic(unittest.TestCase):
         for packagename in self.KNOWN_VALUES:
             result = getfileraw(packagename, "test.raw")
             self.assertEqual(result, CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
-
-
-if __name__ == '__main__':
-    unittest.main()

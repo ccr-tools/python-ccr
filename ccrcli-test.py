@@ -9,7 +9,7 @@ if __name__ == "__main__":
     #auth = AuthFile()
     #auth = AuthSQLite()
     auth = AuthKWallet()
-    auth.store_auth_info("anon1", "ymous4")
+    auth.store_auth_info("an0n", "ym0us")
     session = Session(auth.username, auth.password)
 
     #r = session.check_vote("pyccr-testing")
