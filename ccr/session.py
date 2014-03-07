@@ -1,7 +1,7 @@
 import re
 import logging
 import requests
-from ccr import ccr
+from ccr.ccr import *
 
 
 __all__ = ["Session"]
@@ -88,7 +88,7 @@ class Session(object):
             'remember_me': remember_me,
         }
 
-        self._session.post(ccr.CCR_BASE, data)
+        self._session.post(CCR_BASE, data)
 
         if not ("AURSID" in self._session.cookies):
             logging.debug("There was an error logging in. "
@@ -111,11 +111,11 @@ class Session(object):
         raises a ConnectionError if a network error occur
         """
         try:
-            ccrid = ccr.info(package).ID
+            ccrid = info(package).ID
         except (ValueError, AttributeError):  # AttributeError shouldn't occur
             raise PackageNotFound(package)
 
-        response = self._session.get(ccr.CCR_PKG + "?ID=" + ccrid).text
+        response = self._session.get(CCR_PKG + "?ID=" + ccrid).text
 
         if "class='button' name='do_UnVote'" in response:
             return (True, ccrid) if return_id else True
@@ -138,7 +138,7 @@ class Session(object):
             "ID": ccrid,
             "do_UnVote": 1,
         }
-        self._session.post(ccr.CCR_PKG, data=data)
+        self._session.post(CCR_PKG, data=data)
 
         # check if the package is unvoted now
         if self.check_vote(package):
@@ -160,7 +160,7 @@ class Session(object):
             "ID": ccrid,
             "do_Vote": 1,
         }
-        self._session.post(ccr.CCR_PKG, data=data)
+        self._session.post(CCR_PKG, data=data)
 
         # check if the package is voted now
         if not self.check_vote(package):
@@ -173,7 +173,7 @@ class Session(object):
         raises a _FlagWarning on failure
         """
         try:
-            ccrid = ccr.info(package).ID
+            ccrid = info(package).ID
         except (ValueError, AttributeError):
             raise PackageNotFound(package)
 
@@ -182,9 +182,9 @@ class Session(object):
             "ID": ccrid,
             "do_Flag": 1,
         }
-        self._session.post(ccr.CCR_PKG, data=data)
+        self._session.post(CCR_PKG, data=data)
 
-        if ccr.info(package).OutOfDate == "0":
+        if info(package).OutOfDate == "0":
             raise _FlagWarning("Couldn't flag {} as out of date".format(package))
 
     def unflag(self, package):
@@ -194,7 +194,7 @@ class Session(object):
         raises a _FlagWarning on failure
         """
         try:
-            ccrid = ccr.info(package).ID
+            ccrid = info(package).ID
         except (ValueError, AttributeError):
             raise PackageNotFound(package)
 
@@ -203,9 +203,9 @@ class Session(object):
             "ID": ccrid,
             "do_UnFlag": 1,
         }
-        self._session.post(ccr.CCR_PKG, data=data)
+        self._session.post(CCR_PKG, data=data)
 
-        if ccr.info(package).OutOfDate == "1":
+        if info(package).OutOfDate == "1":
             raise _FlagWarning("Couldn't remove flag".format(package))
 
     def delete(self, package):
@@ -216,7 +216,7 @@ class Session(object):
         """
         #FIXME Throw two exceptions if package doesn't exists
         try:
-            pkginfo = ccr.info(package)
+            pkginfo = info(package)
             ccrid = pkginfo.ID
         except (ValueError, AttributeError):
             raise ValueError(package)
@@ -227,13 +227,13 @@ class Session(object):
             "do_Delete": 1,
             "confirm_Delete": 0,
         }
-        self._session.post(ccr.CCR_PKG, data=data)
+        self._session.post(CCR_PKG, data=data)
 
         # test if the package still exists <==> delete wasn't succesful
         # FIXME use _getccr for a quicker check, avoiding the need to catch the exception
         try:
             #FIXME Throw WARNING - Package couldn't be found
-            ccr.info(package)
+            info(package)
             raise _DeleteWarning("Couldn't delete {}".format(package))
         except PackageNotFound:
             pass  # everything works
@@ -245,7 +245,7 @@ class Session(object):
         raises a _NotifyWarning on failure
         """
         try:
-            ccrid = ccr.info(package).ID
+            ccrid = info(package).ID
         except (ValueError, AttributeError):
             raise ValueError(package)
 
@@ -254,7 +254,7 @@ class Session(object):
             "ID": ccrid,
             "do_Notify": 1,
         }
-        response = self._session.post(ccr.CCR_PKG, data=data)
+        response = self._session.post(CCR_PKG, data=data)
 
         # FIXME use a more stable check
         if "<option value='do_UnNotify'" not in response.text:
@@ -267,7 +267,7 @@ class Session(object):
         raises a _NotifyWarning on failure
         """
         try:
-            ccrid = ccr.info(package).ID
+            ccrid = info(package).ID
         except (ValueError, AttributeError):
             raise ValueError(package)
 
@@ -276,7 +276,7 @@ class Session(object):
             "ID": ccrid,
             "do_UnNotify": 1,
         }
-        response = self._session.post(ccr.CCR_PKG, data=data)
+        response = self._session.post(CCR_PKG, data=data)
 
         if "<option value='do_Notify'" not in response.text:
             raise _NotifyWarning(response)
@@ -288,7 +288,7 @@ class Session(object):
         raises a _OwnershipWarning if the package is already maintained or if it fails
         """
         try:
-            pkginfo = ccr.info(package)
+            pkginfo = info(package)
             ccrid = pkginfo.ID
         except (ValueError, AttributeError):
             raise ValueError(package)
@@ -302,10 +302,10 @@ class Session(object):
             "ID": ccrid,
             "do_Adopt": 1,
         }
-        self._session.post(ccr.CCR_PKG, data=data)
+        self._session.post(CCR_PKG, data=data)
 
         try:
-            pkginfo = ccr.info(package)
+            pkginfo = info(package)
         except ValueError:
             raise ValueError(package)
 
@@ -319,7 +319,7 @@ class Session(object):
         raises a _OwnershipWarning on failure
         """
         try:
-            pkginfo = ccr.info(package)
+            pkginfo = info(package)
             ccrid = pkginfo.ID
         except (ValueError, AttributeError):
             raise ValueError(package)
@@ -329,9 +329,9 @@ class Session(object):
             "ID": ccrid,
             "do_Disown": 1,
         }
-        self._session.post(ccr.CCR_PKG, data=data)
+        self._session.post(CCR_PKG, data=data)
 
-        if ccr.info(package).MaintainerUID != "0":
+        if info(package).MaintainerUID != "0":
             raise _OwnershipWarning("Couldn't disown {}".format(package))
 
     def submit(self, f, category):
@@ -347,7 +347,7 @@ class Session(object):
             "category": self._cat2number[category],
         }
         files = {'pfile': open(f, "rb")}
-        response = self._session.post(ccr.CCR_SUBMIT, data=data, files=files)
+        response = self._session.post(CCR_SUBMIT, data=data, files=files)
 
         error_message = re.search(error, response.text)
         if error_message:
@@ -362,7 +362,7 @@ class Session(object):
         raises _CategoryWarning for an invalid category or if it fails.
         """
         try:
-            pkginfo = ccr.info(package)
+            pkginfo = info(package)
             ccrid = pkginfo.ID
         except (ValueError, AttributeError):
             raise ValueError(package)
@@ -375,7 +375,7 @@ class Session(object):
         except KeyError:
             raise _CategoryWarning("Invalid category!")
 
-        pkgurl = ccr.CCR_PKG + "?ID=" + ccrid
+        pkgurl = CCR_PKG + "?ID=" + ccrid
         response = self._session.post(pkgurl, data=data)
 
         #FIXME find a more stable check

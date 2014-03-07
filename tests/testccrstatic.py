@@ -1,6 +1,8 @@
 import inspect
 import unittest
-from ccr import *
+from unittest.mock import *
+import requests
+from ccr.ccr import *
 
 
 class TestCCRStatic(unittest.TestCase):
@@ -22,31 +24,41 @@ class TestCCRStatic(unittest.TestCase):
             "test_getfileraw": "packages/ls/ls++-git/ls++-git/test.raw",
         },
     }
+    requests.get = Mock()
 
     def test_search(self):
         for packagename in self.KNOWN_VALUES:
+            requests.get.return_value.text = '{"type":"mocked_type","results":{"ID":"mocked_ID"}}'
             results = search(packagename)
-            self.assertGreaterEqual(len(results), 1)
+        self.assertGreaterEqual(len(results), 1)
 
     def test_info(self):
         for packagename in self.KNOWN_VALUES:
+            requests.get.return_value.text = '{"type":"mocked_type","results":{"ID":"mocked_ID","Name":"%s"}}' % packagename
             results = info(packagename)
             self.assertEqual(results.Name, packagename)
 
     def test_msearch(self):
+        requests.get.return_value.text = '{"type":"mocked_type","results":{"ID":"mocked_ID"}}'
         results = msearch(self.MAINTAINER)
         self.assertGreaterEqual(len(results), 1)
 
     def test_list_orphans(self):
+        requests.get.return_value.text = '{"type":"mocked_type","results":{"ID":"mocked_ID"}}'
         results = list_orphans()
         self.assertGreaterEqual(len(results), 1)
 
     def test_getlatest(self):
+        requests.get.return_value.text = '{"type":"mocked_type","results":[{"ID":"mocked_ID"},{"ID":"mocked_ID"},' \
+                                         '{"ID":"mocked_ID"},{"ID":"mocked_ID"},{"ID":"mocked_ID"},{"ID":"mocked_ID"},' \
+                                         '{"ID":"mocked_ID"},{"ID":"mocked_ID"},{"ID":"mocked_ID"},{"ID":"mocked_ID"}]}'
         results = getlatest()
         self.assertEqual(len(results.results), 10)
 
     def test_geturl(self):
         for packagename in self.KNOWN_VALUES:
+            requests.get.return_value.text = '{"type":"mocked_type","results":{"ID":"%s"}}'\
+                                             % self.KNOWN_VALUES[packagename][inspect.stack()[0][3]][-4:]
             result = geturl(packagename)
             self.assertEqual(result, CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
 
@@ -69,7 +81,3 @@ class TestCCRStatic(unittest.TestCase):
         for packagename in self.KNOWN_VALUES:
             result = getfileraw(packagename, "test.raw")
             self.assertEqual(result, CCR_BASE + self.KNOWN_VALUES[packagename][inspect.stack()[0][3]])
-
-
-if __name__ == "__main__":
-    unittest.main()
