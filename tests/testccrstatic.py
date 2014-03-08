@@ -41,7 +41,7 @@ class TestCCRStatic(unittest.TestCase):
         for packagename in KNOWN_VALUES:
             requests.get.return_value.text = MOCK_CCRRPC_VALID_VALUES[inspect.stack()[0][3]]
             self.assertGreaterEqual(len(search(packagename)), 1)
-        #should raise ValueError if data returned from server are malformed
+        #should raise ValueError if data returned from server are invalid
         for packagename in KNOWN_VALUES:
             requests.get.return_value.text = MOCK_CCRRPC_INVALID_VALUES
             self.assertRaises(ValueError, search, packagename)
@@ -51,37 +51,45 @@ class TestCCRStatic(unittest.TestCase):
         for packagename in KNOWN_VALUES:
             requests.get.return_value.text = MOCK_CCRRPC_VALID_VALUES[inspect.stack()[0][3]].replace("%s", packagename)
             self.assertEqual(info(packagename).Name, packagename)
-        #should raise PackageNotFound when no result is returned
+        #should raise PackageNotFound if data returned from server are invalid
         for packagename in KNOWN_VALUES:
             requests.get.return_value.text = MOCK_CCRRPC_INVALID_VALUES
             self.assertRaises(PackageNotFound, info, packagename)
 
     def test_msearch(self):
+        #should pass when a result is returned
         requests.get.return_value.text = MOCK_CCRRPC_VALID_VALUES[inspect.stack()[0][3]]
         self.assertGreaterEqual(len(msearch(MAINTAINER)), 1)
+        #should raise ValueError if data returned from server are invalid
         requests.get.return_value.text = MOCK_CCRRPC_INVALID_VALUES
         self.assertRaises(ValueError, msearch, MAINTAINER)
 
     def test_geturl(self):
+        #should pass when a result is returned
         for packagename in KNOWN_VALUES:
             requests.get.return_value.text = MOCK_CCRRPC_VALID_VALUES[inspect.stack()[0][3]].replace("%s", KNOWN_VALUES[packagename][inspect.stack()[0][3]][-4:])
             self.assertEqual(geturl(packagename), CCR_BASE + KNOWN_VALUES[packagename][inspect.stack()[0][3]])
+        #should raise ValueError if data returned from server are invalid
         for packagename in KNOWN_VALUES:
             requests.get.return_value.text = MOCK_CCRRPC_INVALID_VALUES
             self.assertRaises(ValueError, geturl, packagename)
 
+    #should returns a valid url
     def test_getpkgurl(self):
         for packagename in KNOWN_VALUES:
             self.assertEqual(getpkgurl(packagename), CCR_BASE + KNOWN_VALUES[packagename][inspect.stack()[0][3]])
 
+    #should returns a valid url
     def test_getpkgbuild(self):
         for packagename in KNOWN_VALUES:
             self.assertEqual(getpkgbuild(packagename), CCR_BASE + KNOWN_VALUES[packagename][inspect.stack()[0][3]])
 
+    #should returns a valid url
     def test_getpkgbuildraw(self):
         for packagename in KNOWN_VALUES:
             self.assertEqual(getpkgbuildraw(packagename), CCR_BASE + KNOWN_VALUES[packagename][inspect.stack()[0][3]])
 
+    #should returns a valid url
     def test_getfileraw(self):
         for packagename in KNOWN_VALUES:
             self.assertEqual(getfileraw(packagename, "test.raw"), CCR_BASE + KNOWN_VALUES[packagename][inspect.stack()[0][3]])
