@@ -6,6 +6,7 @@ __all__ = ["search", "info", "msearch", "list_orphans",
            "getlatest", "geturl", "getpkgurl", "getpkgbuild",
            "getpkgbuildraw", "getfileraw",
            "CCR_BASE", "CCR_RPC", "CCR_PKG", "CCR_SUBMIT",
+           "PackageNotFound",
            ]
 
 import contextlib
@@ -33,7 +34,6 @@ class PackageNotFound(ValueError):
 
 class Struct(dict):
     """allows easy access to the parsed json - stolen from Inkane's paste.py"""
-
     def __getattr__(self, name):
         return self[name]
 
@@ -58,7 +58,7 @@ def search(keywords):
     results = _get_ccr_json(SEARCH, keywords)
     try:
         return results.results
-    except AttributeError:
+    except KeyError:
         logging.debug("Nothing could be found.")
         raise ValueError(results)
 
@@ -71,7 +71,7 @@ def info(package):
             logging.warning("Package couldn't be found")
             raise PackageNotFound("Package {} couldn't be found".format(package))
         return results.results
-    except AttributeError:
+    except KeyError:
         logging.warning("Package couldn't be found")
         raise PackageNotFound((package, results))
 
@@ -81,7 +81,7 @@ def msearch(maintainer):
     results = _get_ccr_json(MSEARCH, maintainer)
     try:
         return results.results
-    except AttributeError:
+    except KeyError:
         raise ValueError((maintainer, results))
 
 
@@ -99,7 +99,7 @@ def geturl(package):
     """get the URL of the package's CCR page"""
     try:
         ccrid = info(package).ID
-    except AttributeError:
+    except KeyError:
         raise ValueError(package)
     url = CCR_PKG + "?ID=" + ccrid
     return url
