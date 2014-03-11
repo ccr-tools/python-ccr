@@ -3,8 +3,7 @@ import logging
 import requests
 from ccr.ccr import *
 
-
-__all__ = ["Session"]
+__all__ = ["Session", "PackageNotFound", "InvalidPackage", "CCRWarning"]
 
 logging.basicConfig(level=logging.DEBUG, format='>> %(levelname)s - %(message)s')
 
@@ -52,13 +51,7 @@ class _CategoryWarning(CCRWarning):
 class Session(object):
     """class for all CCR actions """
 
-    _session = requests.session()
-
-    def __init__(self, username, password, rememberme=False):
-        """authenticate on CCR
-        raises a ConnectionError if a network error occur
-        raises a ValueError if login fails
-        """
+    def __init__(self, username=None, password=None, rememberme=False):
         self._cat2number = {
             "none": 1,
             "daemons": 2,
@@ -80,8 +73,27 @@ class Session(object):
             "utils": 18,
             "lib32": 19,
         }
-        self._username = username
-        remember_me = "off" if rememberme else "on"
+        self._session = requests.session()
+        if username and password is not None:
+            self._username = username
+            self.authenticate(username, password, rememberme)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.close()
+
+    def close(self):
+        """end the session"""
+        self._session.close()
+
+    def authenticate(self, username, password, rememberme=False):
+        """authenticate on CCR
+        raises a ConnectionError if a network error occur
+        raises a ValueError if login fails
+        """
+        remember_me = "on" if rememberme else "off"
         data = {
             'user': username,
             'passwd': password,
@@ -94,16 +106,6 @@ class Session(object):
             logging.debug("There was an error logging in. "
                           "Please check if username and password are correct")
             raise ValueError(username, password)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, tb):
-        self.close()
-
-    def close(self):
-        """end the session"""
-        self._session.close()
 
     def check_vote(self, package, return_id=False):
         """check to see if you have already voted for a package
@@ -121,28 +123,6 @@ class Session(object):
             return (True, ccrid) if return_id else True
         else:
             return (False, ccrid) if return_id else False
-
-    def unvote(self, package):
-        """unvote a package on CCR
-        raises a PackageNotFound exception if the package doesn't exist
-        raises a ConnectionError if a network error occur
-        raises a _VoteWarning if it is already unvoted or if it couldn't unvote
-        """
-        # check_vote might raise PackageNotFound
-        voted, ccrid = self.check_vote(package, return_id=True)
-        if not voted:
-            raise _VoteWarning("Already unvoted or never voted!")  # package didn't have a vote or never voted
-
-        data = {
-            "IDs[%s]" % ccrid: 1,
-            "ID": ccrid,
-            "do_UnVote": 1,
-        }
-        self._session.post(CCR_PKG, data=data)
-
-        # check if the package is unvoted now
-        if self.check_vote(package):
-            raise _VoteWarning("Couldn't unvote {}".format(package))
 
     def vote(self, package):
         """vote for a package on CCR
@@ -165,6 +145,28 @@ class Session(object):
         # check if the package is voted now
         if not self.check_vote(package):
             raise _VoteWarning("Couldn't vote for {}".format(package))
+
+    def unvote(self, package):
+        """unvote a package on CCR
+        raises a PackageNotFound exception if the package doesn't exist
+        raises a ConnectionError if a network error occur
+        raises a _VoteWarning if it is already unvoted or if it couldn't unvote
+        """
+        # check_vote might raise PackageNotFound
+        voted, ccrid = self.check_vote(package, return_id=True)
+        if not voted:
+            raise _VoteWarning("Already unvoted or never voted!")  # package didn't have a vote or never voted
+
+        data = {
+            "IDs[%s]" % ccrid: 1,
+            "ID": ccrid,
+            "do_UnVote": 1,
+        }
+        self._session.post(CCR_PKG, data=data)
+
+        # check if the package is unvoted now
+        if self.check_vote(package):
+            raise _VoteWarning("Couldn't unvote {}".format(package))
 
     def flag(self, package):
         """flag a CCR package as out of date
@@ -207,36 +209,6 @@ class Session(object):
 
         if info(package).OutOfDate == "1":
             raise _FlagWarning("Couldn't remove flag".format(package))
-
-    def delete(self, package):
-        """delete a package from CCR
-        raises ValueError if the package does not exist
-        raises a ConnectionError if a network error occur
-        raises a _DeleteWarning on failure
-        """
-        #FIXME Throw two exceptions if package doesn't exists
-        try:
-            pkginfo = info(package)
-            ccrid = pkginfo.ID
-        except (ValueError, AttributeError):
-            raise ValueError(package)
-
-        data = {
-            "IDs[%s]" % ccrid: 1,
-            "ID": ccrid,
-            "do_Delete": 1,
-            "confirm_Delete": 0,
-        }
-        self._session.post(CCR_PKG, data=data)
-
-        # test if the package still exists <==> delete wasn't succesful
-        # FIXME use _getccr for a quicker check, avoiding the need to catch the exception
-        try:
-            #FIXME Throw WARNING - Package couldn't be found
-            info(package)
-            raise _DeleteWarning("Couldn't delete {}".format(package))
-        except PackageNotFound:
-            pass  # everything works
 
     def notify(self, package):
         """set the notify flag on a package
@@ -354,6 +326,36 @@ class Session(object):
             raise InvalidPackage(error_message.groupdict()["message"])
         if "pkgbuild_view.php?p=" not in response.text:
             raise _SubmitWarning("Couldn't submit {}".format("package"))
+
+    def delete(self, package):
+        """delete a package from CCR
+        raises ValueError if the package does not exist
+        raises a ConnectionError if a network error occur
+        raises a _DeleteWarning on failure
+        """
+        #FIXME Throw two exceptions if package doesn't exists
+        try:
+            pkginfo = info(package)
+            ccrid = pkginfo.ID
+        except (ValueError, AttributeError):
+            raise ValueError(package)
+
+        data = {
+            "IDs[%s]" % ccrid: 1,
+            "ID": ccrid,
+            "do_Delete": 1,
+            "confirm_Delete": 0,
+            }
+        self._session.post(CCR_PKG, data=data)
+
+        # test if the package still exists <==> delete wasn't succesful
+        # FIXME use _getccr for a quicker check, avoiding the need to catch the exception
+        try:
+            #FIXME Throw WARNING - Package couldn't be found
+            info(package)
+            raise _DeleteWarning("Couldn't delete {}".format(package))
+        except PackageNotFound:
+            pass  # everything works
 
     def setcategory(self, package, category):
         """change/set the category of a package already in the CCR
