@@ -6,5 +6,5 @@ __all__ = ["search", "info", "msearch", "list_orphans",
            "getlatest", "geturl", "getpkgurl", "getpkgbuild",
            "getpkgbuildraw", "getfileraw",
            "CCR_BASE", "CCR_RPC", "CCR_PKG", "CCR_SUBMIT",
-           "Session"
+           "Session", "PackageNotFound", "InvalidPackage", "CCRWarning",
 ]
