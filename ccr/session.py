@@ -114,7 +114,7 @@ class Session(object):
         """
         try:
             ccrid = info(package).ID
-        except (ValueError, AttributeError):  # AttributeError shouldn't occur
+        except (ValueError, KeyError):
             raise PackageNotFound(package)
 
         response = self._session.get(CCR_PKG + "?ID=" + ccrid).text
@@ -176,7 +176,7 @@ class Session(object):
         """
         try:
             ccrid = info(package).ID
-        except (ValueError, AttributeError):
+        except (ValueError, KeyError):
             raise PackageNotFound(package)
 
         data = {
@@ -197,7 +197,7 @@ class Session(object):
         """
         try:
             ccrid = info(package).ID
-        except (ValueError, AttributeError):
+        except (ValueError, KeyError):
             raise PackageNotFound(package)
 
         data = {
@@ -218,7 +218,7 @@ class Session(object):
         """
         try:
             ccrid = info(package).ID
-        except (ValueError, AttributeError):
+        except (ValueError, KeyError):
             raise ValueError(package)
 
         data = {
@@ -240,7 +240,7 @@ class Session(object):
         """
         try:
             ccrid = info(package).ID
-        except (ValueError, AttributeError):
+        except (ValueError, KeyError):
             raise ValueError(package)
 
         data = {
@@ -262,7 +262,7 @@ class Session(object):
         try:
             pkginfo = info(package)
             ccrid = pkginfo.ID
-        except (ValueError, AttributeError):
+        except (ValueError, KeyError):
             raise ValueError(package)
 
         if pkginfo.MaintainerUID != "0":
@@ -293,7 +293,7 @@ class Session(object):
         try:
             pkginfo = info(package)
             ccrid = pkginfo.ID
-        except (ValueError, AttributeError):
+        except (ValueError, KeyError):
             raise ValueError(package)
 
         data = {
@@ -337,7 +337,7 @@ class Session(object):
         try:
             pkginfo = info(package)
             ccrid = pkginfo.ID
-        except (ValueError, AttributeError):
+        except (ValueError, KeyError):
             raise ValueError(package)
 
         data = {
@@ -366,7 +366,7 @@ class Session(object):
         try:
             pkginfo = info(package)
             ccrid = pkginfo.ID
-        except (ValueError, AttributeError):
+        except (ValueError, KeyError):
             raise ValueError(package)
 
         try:
