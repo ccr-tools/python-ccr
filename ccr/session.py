@@ -170,7 +170,7 @@ class Session(object):
 
     def flag(self, package):
         """flag a CCR package as out of date
-        raises a ValueError if the package doesn't exist
+        raises a PackageNotFound exception if the package doesn't exist
         raises a ConnectionError if a network error occur
         raises a _FlagWarning on failure
         """
@@ -191,7 +191,7 @@ class Session(object):
 
     def unflag(self, package):
         """unflag a CCR package as out of date
-        raises a ValueError if the package doesn't exist
+        raises a PackageNotFound exception if the package doesn't exist
         raises a ConnectionError if a network error occur
         raises a _FlagWarning on failure
         """
@@ -212,36 +212,36 @@ class Session(object):
 
     def notify(self, package):
         """set the notify flag on a package
-        raises ValueError if the package does not exist
+        raises a PackageNotFound exception if the package doesn't exist
         raises a ConnectionError if a network error occur
         raises a _NotifyWarning on failure
         """
         try:
             ccrid = info(package).ID
         except (ValueError, KeyError):
-            raise ValueError(package)
+            raise PackageNotFound(package)
 
         data = {
             "IDs[%s]" % ccrid: 1,
             "ID": ccrid,
             "do_Notify": 1,
         }
-        response = self._session.post(CCR_PKG, data=data)
+        response = self._session.post(CCR_PKG, data=data).text
 
         # FIXME use a more stable check
-        if "<option value='do_UnNotify'" not in response.text:
+        if "<option value='do_UnNotify'" not in response:
             raise _NotifyWarning(response)
 
     def unnotify(self, package):
         """unset the notify flag on a package
-        raises ValueError if the package does not exist
+        raises a PackageNotFound exception if the package doesn't exist
         raises a ConnectionError if a network error occur
         raises a _NotifyWarning on failure
         """
         try:
             ccrid = info(package).ID
         except (ValueError, KeyError):
-            raise ValueError(package)
+            raise PackageNotFound(package)
 
         data = {
             "IDs[%s]" % ccrid: 1,
@@ -255,7 +255,7 @@ class Session(object):
 
     def adopt(self, package):
         """adopt an orphaned CCR package
-        raises ValueError if the package does not exist
+        raises a PackageNotFound exception if the package doesn't exist
         raises a ConnectionError if a network error occur
         raises a _OwnershipWarning if the package is already maintained or if it fails
         """
@@ -263,7 +263,7 @@ class Session(object):
             pkginfo = info(package)
             ccrid = pkginfo.ID
         except (ValueError, KeyError):
-            raise ValueError(package)
+            raise PackageNotFound(package)
 
         if pkginfo.MaintainerUID != "0":
             logging.warning("Warning: Adopting maintained package!")
@@ -279,14 +279,14 @@ class Session(object):
         try:
             pkginfo = info(package)
         except ValueError:
-            raise ValueError(package)
+            raise PackageNotFound(package)
 
         if pkginfo.Maintainer != self._username:
             raise _OwnershipWarning("You already own {}".format(package))
 
     def disown(self, package):
         """disown a CCR package
-        raises ValueError if the package does not exist
+        raises a PackageNotFound exception if the package doesn't exist
         raises a ConnectionError if a network error occur
         raises a _OwnershipWarning on failure
         """
@@ -294,7 +294,7 @@ class Session(object):
             pkginfo = info(package)
             ccrid = pkginfo.ID
         except (ValueError, KeyError):
-            raise ValueError(package)
+            raise PackageNotFound(package)
 
         data = {
             "IDs[%s]" % ccrid: 1,
@@ -329,7 +329,7 @@ class Session(object):
 
     def delete(self, package):
         """delete a package from CCR
-        raises ValueError if the package does not exist
+        raises a PackageNotFound exception if the package doesn't exist
         raises a ConnectionError if a network error occur
         raises a _DeleteWarning on failure
         """
@@ -338,7 +338,7 @@ class Session(object):
             pkginfo = info(package)
             ccrid = pkginfo.ID
         except (ValueError, KeyError):
-            raise ValueError(package)
+            raise PackageNotFound(package)
 
         data = {
             "IDs[%s]" % ccrid: 1,
@@ -359,7 +359,7 @@ class Session(object):
 
     def setcategory(self, package, category):
         """change/set the category of a package already in the CCR
-        raises ValueError if the package does not exist
+        raises a PackageNotFound exception if the package doesn't exist
         raises a requests.ConnectionError if a network error occur
         raises _CategoryWarning for an invalid category or if it fails.
         """
@@ -367,7 +367,7 @@ class Session(object):
             pkginfo = info(package)
             ccrid = pkginfo.ID
         except (ValueError, KeyError):
-            raise ValueError(package)
+            raise PackageNotFound(package)
 
         try:
             data = {
