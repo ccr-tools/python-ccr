@@ -311,7 +311,6 @@ class Session(object):
         raises IOError [Errno 2] if 'f' does not exist
         raises a ConnectionError if a network error occur
         """
-
         error = re.compile(r"<span class='error'>(?P<message>.*)</span>")
         data = {
             "pkgsubmit": 1,
@@ -324,7 +323,7 @@ class Session(object):
         if error_message:
             raise InvalidPackage(error_message.groupdict()["message"])
         if "pkgbuild_view.php?p=" not in response.text:
-            raise _SubmitWarning("Couldn't submit {}".format("package"))
+            raise _SubmitWarning("Couldn't submit {}".format(f))
 
     def delete(self, package):
         """delete a package from CCR
