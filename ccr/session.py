@@ -275,14 +275,13 @@ class Session(object):
             "do_Adopt": 1,
         }
         self._session.post(CCR_PKG, data=data)
-
         try:
             pkginfo = info(package)
-        except ValueError:
+        except (ValueError, KeyError):
             raise PackageNotFound(package)
 
         if pkginfo.Maintainer != self._username:
-            raise _OwnershipWarning("You already own {}".format(package))
+            raise _OwnershipWarning("Couldn't adopt {}".format(package))
 
     def disown(self, package):
         """disown a CCR package
