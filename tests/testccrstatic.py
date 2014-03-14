@@ -26,46 +26,46 @@ class TestCCRStatic(unittest.TestCase):
                 "test_getfileraw": "packages/ls/ls++-git/ls++-git/test.raw",
             },
         }
-        cls.mock_ccrrpc_valid_values = '{"type":"mock","results":{"ID":"%s","Name":"%s"}}'
-        cls.mock_ccrrpc_invalid_values = '{"type":"mock"}'
+        cls.mock_valid_return_values = '{"type":"mock","results":{"ID":"%s","Name":"%s"}}'
+        cls.mock_invalid_return_values = '{"type":"mock"}'
         requests.get = Mock()
 
     def test_search(self):
         #should pass when a result is returned
         for packagename in self.known_values:
-            requests.get.return_value.text = self.mock_ccrrpc_valid_values
+            requests.get.return_value.text = self.mock_valid_return_values
             self.assertGreaterEqual(len(search(packagename)), 1)
         #should raises ValueError if data returned from server are invalid
         for packagename in self.known_values:
-            requests.get.return_value.text = self.mock_ccrrpc_invalid_values
+            requests.get.return_value.text = self.mock_invalid_return_values
             self.assertRaises(ValueError, search, packagename)
 
     def test_info(self):
         #should pass when a result is returned
         for packagename in self.known_values:
-            requests.get.return_value.text = self.mock_ccrrpc_valid_values.replace("%s", packagename)
+            requests.get.return_value.text = self.mock_valid_return_values.replace("%s", packagename)
             self.assertEqual(info(packagename).Name, packagename)
         #should raises PackageNotFound if data returned from server are invalid
         for packagename in self.known_values:
-            requests.get.return_value.text = self.mock_ccrrpc_invalid_values
+            requests.get.return_value.text = self.mock_invalid_return_values
             self.assertRaises(PackageNotFound, info, packagename)
 
     def test_msearch(self):
         #should pass when a result is returned
-        requests.get.return_value.text = self.mock_ccrrpc_valid_values
+        requests.get.return_value.text = self.mock_valid_return_values
         self.assertGreaterEqual(len(msearch(self.maintainer)), 1)
         #should raises ValueError if data returned from server are invalid
-        requests.get.return_value.text = self.mock_ccrrpc_invalid_values
+        requests.get.return_value.text = self.mock_invalid_return_values
         self.assertRaises(ValueError, msearch, self.maintainer)
 
     def test_geturl(self):
         #should pass when a result is returned
         for packagename in self.known_values:
-            requests.get.return_value.text = self.mock_ccrrpc_valid_values.replace("%s", self.known_values[packagename][inspect.stack()[0][3]][-4:])
+            requests.get.return_value.text = self.mock_valid_return_values.replace("%s", self.known_values[packagename][inspect.stack()[0][3]][-4:])
             self.assertEqual(geturl(packagename), CCR_BASE + self.known_values[packagename][inspect.stack()[0][3]])
         #should raises ValueError if data returned from server are invalid
         for packagename in self.known_values:
-            requests.get.return_value.text = self.mock_ccrrpc_invalid_values
+            requests.get.return_value.text = self.mock_invalid_return_values
             self.assertRaises(ValueError, geturl, packagename)
 
     #should returns a valid url
