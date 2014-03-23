@@ -343,7 +343,7 @@ class Session(object):
             "ID": ccrid,
             "do_Delete": 1,
             "confirm_Delete": 0,
-            }
+        }
         self._session.post(CCR_PKG, data=data)
 
         # test if the package still exists <==> delete wasn't succesful
