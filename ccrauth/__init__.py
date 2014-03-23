@@ -1,5 +1,5 @@
 from ccrauth.authfile import AuthFile
-from ccrauth.authsqlite import AuthSQLite
+from ccrauth.authdb import AuthDB
 from ccrauth.authkwallet import AuthKWallet
 
-__all__ = ["AuthFile", "AuthSQLite", "AuthKWallet"]
+__all__ = ["AuthFile", "AuthDB", "AuthKWallet"]

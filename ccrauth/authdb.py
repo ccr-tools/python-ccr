@@ -1,9 +1,10 @@
 import sqlite3
 import logging
+import os
 from ccrauth.ccrauth import CCRAuth
 
 
-class AuthSQLite(CCRAuth):
+class AuthDB(CCRAuth):
     """A class to manage authentication information in a database (ccr.db)"""
 
     def __init__(self):
@@ -11,8 +12,9 @@ class AuthSQLite(CCRAuth):
         username and password set to None if the table auth doesn't exists
         """
         super().__init__()
+        self.db_path = os.path.expanduser('~') + "/.config/ccr-tools/ccr.db"
 
-        self.conn = sqlite3.connect('ccr.db')
+        self.conn = sqlite3.connect(self.db_path)
         self.cur = self.conn.cursor()
         self.cur.execute("SELECT * FROM sqlite_master WHERE type='table' AND name='auth';")
         if self.cur.fetchone() is not None:
@@ -27,7 +29,7 @@ class AuthSQLite(CCRAuth):
     def store_auth_info(self, username, password):
         """ store/update authentication information in the database
         """
-        self.conn = sqlite3.connect('ccr.db')
+        self.conn = sqlite3.connect(self.db_path)
         self.cur = self.conn.cursor()
         self.cur.execute("CREATE TABLE IF NOT EXISTS auth (id INTEGER PRIMARY KEY, username TEXT, password TEXT)")
         self.cur.execute("INSERT OR REPLACE INTO auth (id, username, password) VALUES (0,?,?)", (username, password))
