@@ -47,7 +47,7 @@ class TestSession(unittest.TestCase):
         # should raises _VoteWarning if the package is already voted
         self.session.check_vote = Mock(return_value=(True, 0))
         self.assertRaises(_VoteWarning, self.session.vote, self.package)
-        # should failed if the server confirmation fails
+        # should fails if the server confirmation fails
         self.session.check_vote = Mock(side_effect=[(False, 0), False])
         self.assertRaises(_VoteWarning, self.session.vote, self.package)
 
@@ -58,7 +58,7 @@ class TestSession(unittest.TestCase):
         # should raises _VoteWarning if the package already or never voted
         self.session.check_vote = Mock(return_value=(False, 0))
         self.assertRaises(_VoteWarning, self.session.unvote, self.package)
-        # should failed if the server confirmation fails
+        # should raises _VoteWarning if the server confirmation fails
         self.session.check_vote = Mock(side_effect=[(True, 0), True])
         self.assertRaises(_VoteWarning, self.session.unvote, self.package)
 
@@ -139,7 +139,7 @@ class TestSession(unittest.TestCase):
         # should fails if the package is invalid
         self.session._session.post.return_value.text = "<span class='error'>(?P<message>.*)</span>"
         self.assertRaises(InvalidPackage, self.session.submit, "mock", self.category)
-        # should fails if submit confirmation fails
+        # should raises _SubmitWarning if the server confirmation fails
         self.session._session.post.return_value.text = "mock"
         self.assertRaises(_SubmitWarning, self.session.submit, "mock", self.category)
 
