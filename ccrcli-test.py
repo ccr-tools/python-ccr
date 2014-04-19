@@ -1,19 +1,21 @@
 from ccr import *
-#from ccrauth import AuthFile
-#from ccrauth import AuthSQLite
+from ccrauth import AuthFile
+from ccrauth import AuthDB
 from ccrauth import AuthKWallet
+import os
 
 
 if __name__ == "__main__":
 
     #auth = AuthFile()
-    #auth = AuthSQLite()
-    auth = AuthKWallet()
-    auth.store_auth_info("an0n", "ym0us")
-    session = Session(auth.username, auth.password)
+    auth = AuthDB()
+    auth.CCR_DB = os.path.expanduser('~') + "/.config/ccr-tools/ccr.db"
+    #auth = AuthKWallet()
+    #auth.store_auth_info("an0n", "ym0us")
+    auth.delete_auth_info()
+    #session = Session(auth.username, auth.password)
 
-    #r = session.check_vote("pyccr-testing")
-    #print(r)
+    #print(session.check_vote("pyccr-testing"))
     #session.adopt("pyccr-testing")
     #session.disown("pyccr-testing")
     #session.flag("pyccr-testing")

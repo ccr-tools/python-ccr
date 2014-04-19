@@ -28,3 +28,6 @@ class AuthKWallet(CCRAuth):
         self.wallet.setFolder("chakra-ccr")
         self.wallet.writePassword(username, password)
         self._set_info(username, password)
+
+    def delete_auth_info(self):
+        self.wallet.removeFolder("chakra-ccr")
