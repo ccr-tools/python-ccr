@@ -6,8 +6,8 @@ before_install:
   - sudo apt-get install -y libqscintilla2-dev cmake automoc
   - sudo apt-get install -y libboost-dev kdepim-runtime python3-pyqt4
   - sudo apt-get install -y python3-pyqt4.qsci pyqt4-dev-tools 
-  - sudo apt-get install -y python3-sip-dev mesa-common-dev
-  - sudo apt-get install -y kdelibs5-dev kdelibs-bin
+  - sudo apt-get install -y python3-sip-dev mesa-common-dev kdepim-dev
+  - sudo apt-get install -y kdelibs5-dev kdelibs-bin kde-devel
   - ./.build_kdebindings.sh
 install: 
   - "pip install -r requirements-tests.txt --use-mirrors"
