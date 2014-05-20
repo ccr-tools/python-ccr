@@ -3,6 +3,9 @@ python:
   - "3.3"
 install: 
   - "pip install -r requirements-tests.txt --use-mirrors"
+  - "pip install coveralls"
   - "python setup.py install"
-script: "nosetests --with-coverage --cover-package=ccr"
-after_success: "coveralls"
+script:
+  nosetests --with-coverage --cover-package=ccr
+after_success:
+  coveralls
