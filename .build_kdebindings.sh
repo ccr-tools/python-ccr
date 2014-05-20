@@ -4,6 +4,8 @@ wget http://download.kde.org/stable/${version}/src/pykde4-${version}.tar.xz
 tar xf pykde4-${version}.tar.xz
 mkdir build && cd build
 export PYTHONDONTWRITEBYTECODE="TRUE"
+sudo ln -s /usr/lib/libpython3.3m.so /usr/lib/libpython3.4m.so
+sudo ln -s /usr/lib/libpython3.3m.so /usr/lib/libpython3.4m.so.1.0
 cmake ../pykde4-${version} \
     -DCMAKE_BUILD_TYPE=Release \
     -DKDE4_BUILD_TESTS=OFF \
