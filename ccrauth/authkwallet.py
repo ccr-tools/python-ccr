@@ -1,5 +1,9 @@
 import logging
-from PyKDE4.kdeui import KWallet
+try:
+    from PyKDE4.kdeui import KWallet
+except ImportError as e:
+    KWallet = e
+    # Handle below
 from ccrauth.ccrauth import CCRAuth
 
 
@@ -10,6 +14,11 @@ class AuthKWallet(CCRAuth):
         """ define username and password if it exists in KWallet
         """
         super().__init__()
+
+        # Handling this in __init__ means the library can still be
+        # imported, even without the pykde4 bindings installed.
+        if type(KWallet) == type(ImportError()):
+            raise KWallet
 
         self.wallet = KWallet.Wallet.openWallet(KWallet.Wallet.LocalWallet(), 0)
         if not self.wallet.hasFolder("chakra-ccr"):
