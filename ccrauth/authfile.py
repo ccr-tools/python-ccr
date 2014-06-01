@@ -3,6 +3,8 @@ import logging
 import os
 from ccrauth.ccrauth import CCRAuth
 
+CCRAUTH_FILE = "ccrauth.txt"
+
 
 class AuthFile(CCRAuth):
     """A class to manage authentication information in a file (ccrauth.txt)"""
@@ -12,13 +14,12 @@ class AuthFile(CCRAuth):
         username and password set to None if the file doesn't exists
         """
         super().__init__()
-        self.file_path = os.path.expanduser('~') + "/.config/ccr-tools/ccrauth.txt"
 
         try:
-            with open(self.file_path) as rfile:
-                data = json.load(rfile)
-        except IOError:
-            logging.debug("File ccrauth.txt doesn't exists.")
+            with open(CCRAUTH_FILE) as file:
+                data = json.load(file)
+        except OSError:
+            logging.debug("File ccrauth.txt cannot be opened.")
             return
 
         self._set_info(data['username'], data['password'])
@@ -32,9 +33,16 @@ class AuthFile(CCRAuth):
             "password": password,
         }
         try:
-            with open(self.file_path, 'w') as wfile:
-                json.dump(data, wfile)
-        except IOError:
-            raise
+            with open(CCRAUTH_FILE, 'w') as file:
+                json.dump(data, file)
+        except OSError:
+            logging.debug("File ccrauth.txt cannot be opened.")
+            return
 
         self._set_info(username, password)
+
+    def delete_auth_info(self):
+        try:
+            os.remove(CCRAUTH_FILE)
+        except OSError:
+            logging.debug("File ccrauth.txt cannot be deleted.")

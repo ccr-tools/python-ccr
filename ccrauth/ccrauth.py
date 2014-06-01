@@ -20,3 +20,9 @@ class CCRAuth(object):
         """ store authentication information
         reimplemented in AuthFile, AuthDB and AuthKWallet classes
         """
+
+    @abc.abstractmethod
+    def delete_auth_info(self):
+        """ remove authentication information
+        reimplemented in AuthFile, AuthDB and AuthKWallet classes
+        """
