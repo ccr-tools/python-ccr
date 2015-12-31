@@ -1,7 +1,7 @@
 from ccr.ccr import *
 from ccr.session import *
 
-__version__ = 0.2
+__version__ = 0.3
 __all__ = ['search', 'info', 'msearch', 'list_orphans',
            'getlatest', 'geturl', 'getpkgurl', 'getpkgbuild',
            'getpkgbuildraw', 'getfileraw',
