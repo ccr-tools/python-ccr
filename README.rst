@@ -11,7 +11,8 @@ CCR
    :target: https://www.codacy.com/app/rshipp/python-ccr
    :alt: Codacy Grade
 
-A simple python module for accessing and working with the Chakra Community Repository.
+A simple python module for accessing and working with the `Chakra Community
+Repository`_.
 
 Installation
 ------------
@@ -30,6 +31,8 @@ Once the bindings have installed, or if you can do without them, just run::
 Contributing
 ------------
 
-This project follows the git-flow_ branching model. Please submit pull requests to the *development* branch, not *master*.
+This project follows the git-flow_ branching model. Please submit pull
+requests to the *development* branch, not *master*.
 
+.. _Chakra_Community_Repository: https://chakraos.org/ccr/
 .. _git-flow: http://nvie.com/posts/a-successful-git-branching-model/
