@@ -40,9 +40,9 @@ Session Management
 Custom Exceptions
 -----------------
 
-.. autoclass:: ccr.PackageNotFound
-.. autoclass:: ccr.InvalidPackage
-.. autoclass:: ccr.CCRWarning
+.. autoexception:: ccr.PackageNotFound
+.. autoexception:: ccr.InvalidPackage
+.. autoexception:: ccr.CCRWarning
 
 Indices and tables
 ==================
