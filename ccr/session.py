@@ -102,7 +102,7 @@ class Session(object):
 
         self._session.post(CCR_BASE, data)
 
-        if not ("AURSID" in self._session.cookies):
+        if not "AURSID" in self._session.cookies:
             logging.debug("There was an error logging in. "
                           "Please check if username and password are correct")
             raise ValueError(username, password)
