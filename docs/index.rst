@@ -38,6 +38,18 @@ Session Management
 .. autoclass:: ccr.Session
    :members:
 
+Authentication
+--------------
+
+.. autoclass:: ccrauth.CCRAuth
+   :members:
+
+.. autoclass:: ccrauth.AuthFile
+   :members:
+
+.. autoclass:: ccrauth.AuthDB
+   :members:
+
 Custom Exceptions
 -----------------
 
