@@ -8,10 +8,6 @@ __all__ = ["Session", "PackageNotFound", "InvalidPackage", "CCRWarning"]
 logging.basicConfig(level=logging.DEBUG, format='>> %(levelname)s - %(message)s')
 
 
-class PackageNotFound(ValueError):
-    """Package does not exit"""
-
-
 class InvalidPackage(TypeError):
     """Invalid package or wrong file type"""
 
