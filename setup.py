@@ -2,6 +2,9 @@ from setuptools import find_packages, setup
 import os
 from ccr import __version__
 
+# allow setup.py to be run from any path
+os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
+
 requirements = open(os.path.join(os.path.dirname(__file__),
             'requirements.txt')).read()
 requires = requirements.strip().split('\n')
