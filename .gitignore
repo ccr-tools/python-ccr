@@ -6,3 +6,4 @@ pkg/
 .ropeproject/
 *.orig
 .directory
+.coverage

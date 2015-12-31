@@ -6,6 +6,6 @@ install:
   - "pip install coveralls"
   - "python setup.py install"
 script:
-  nosetests --with-coverage --cover-package=ccr
+  nosetests --with-coverage --cover-package=ccr,ccrauth
 after_success:
   coveralls
