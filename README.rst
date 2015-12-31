@@ -17,14 +17,10 @@ Repository`_.
 Installation
 ------------
 
-If you want to use the KWallet authentication support, you will need to
-install the Python 3 KDE bindings for your distro. Assuming you're on
-Chakra, that means you'll want to run::
+To install from source, just run::
 
-    sudo pacman -S kdebindings-python3
-
-Once the bindings have installed, or if you can do without them, just run::
-
+    git clone https://github.com/ccr-tools/python-ccr.git
+    cd python-ccr
     sudo pip install -r requirements.txt
     sudo python setup.py install
 

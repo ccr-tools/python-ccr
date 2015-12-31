@@ -1,0 +1,7 @@
+For KDE4 users only.
+
+If you want to use the KWallet authentication support, you will need to
+install the Python 3 KDE bindings for your distro. Assuming you're on
+Chakra, that means you'll want to run:
+
+    sudo pacman -S kdebindings-python3
