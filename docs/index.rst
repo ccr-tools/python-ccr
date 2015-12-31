@@ -42,9 +42,6 @@ Session Management
 Authentication
 --------------
 
-.. autoclass:: ccrauth.CCRAuth
-   :members:
-
 .. autoclass:: ccrauth.AuthFile
    :members:
 
