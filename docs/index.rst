@@ -36,6 +36,7 @@ Session Management
 ------------------
 
 .. autoclass:: ccr.Session
+   :members:
 
 Custom Exceptions
 -----------------
