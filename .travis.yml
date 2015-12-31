@@ -8,4 +8,6 @@ install:
 script:
   nosetests --with-coverage --cover-package=ccr,ccrauth
 after_success:
-  coveralls
+  - coveralls
+  - coverage xml
+  - python-codacy-coverage -r coverage.xml
