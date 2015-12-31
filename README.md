@@ -5,6 +5,7 @@ A simple python module for accessing and working with the Chakra Community Repos
 
 [![Build Status](https://travis-ci.org/ccr-tools/python-ccr.svg)](https://travis-ci.org/ccr-tools/python-ccr)
 [![Coverage Status](https://coveralls.io/repos/ccr-tools/python-ccr/badge.png?branch=development)](https://coveralls.io/r/ccr-tools/python-ccr?branch=development)
+[![Codacy Badge](https://api.codacy.com/project/badge/grade/91af4e0a847247aaa5490e699ecfd6ea)](https://www.codacy.com/app/rshipp/python-ccr)
 
 ## Installation
 
