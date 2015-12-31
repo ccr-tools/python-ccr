@@ -15,12 +15,34 @@ Contents:
 Description
 -----------
 
+``ccr`` is a Python library for interacting with the Chakra Community
+Repository, or CCR.
 
 Functions
 ---------
 
-.. automodule:: ccr
+.. autofunction:: ccr.search
+.. autofunction:: ccr.info
+.. autofunction:: ccr.msearch
+.. autofunction:: ccr.list_orphans
+.. autofunction:: ccr.getlatest
+.. autofunction:: ccr.geturl
+.. autofunction:: ccr.getpkgurl
+.. autofunction:: ccr.getpkgbuild
+.. autofunction:: ccr.getpkgbuildraw
+.. autofunction:: ccr.getfileraw
 
+Session Management
+------------------
+
+.. autoclass:: ccr.Session
+
+Custom Exceptions
+-----------------
+
+.. autoclass:: ccr.PackageNotFound
+.. autoclass:: ccr.InvalidPackage
+.. autoclass:: ccr.CCRWarning
 
 Indices and tables
 ==================
@@ -28,4 +50,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
