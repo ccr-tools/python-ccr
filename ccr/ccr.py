@@ -15,7 +15,7 @@ import urllib.parse
 import json
 import logging
 
-logging.basicConfig(level=logging.DEBUG, format='>> %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.WARN, format='>> %(levelname)s - %(message)s')
 
 CCR_BASE = "http://chakraos.org/ccr/"
 CCR_RPC = CCR_BASE + "rpc.php?type="
