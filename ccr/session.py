@@ -5,7 +5,7 @@ from ccr.ccr import *
 
 __all__ = ["Session", "PackageNotFound", "InvalidPackage", "CCRWarning"]
 
-logging.basicConfig(level=logging.WARN, format='>> %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.ERROR, format='>> %(levelname)s - %(message)s')
 
 
 class InvalidPackage(TypeError):
