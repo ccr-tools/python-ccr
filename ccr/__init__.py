@@ -3,8 +3,8 @@ from ccr.session import *
 
 __version__ = 0.3
 __all__ = ['search', 'info', 'msearch', 'list_orphans',
-           'getlatest', 'geturl', 'getpkgurl', 'getpkgbuild',
-           'getpkgbuildraw', 'getfileraw',
+           "latest", "url", "pkg_url", "pkgbuild_url",
+           "pkgbuild_raw_url", "file_raw_url",
            'CCR_BASE', 'CCR_RPC', 'CCR_PKG', 'CCR_SUBMIT',
            'Session', 'PackageNotFound', 'InvalidPackage', 'CCRWarning',
 ]

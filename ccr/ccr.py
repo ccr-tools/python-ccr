@@ -3,8 +3,8 @@
 from __future__ import print_function
 
 __all__ = ["search", "info", "msearch", "list_orphans",
-           "getlatest", "geturl", "getpkgurl", "getpkgbuild",
-           "getpkgbuildraw", "getfileraw",
+           "latest", "url", "pkg_url", "pkgbuild_url",
+           "pkgbuild_raw_url", "file_raw_url",
            "CCR_BASE", "CCR_RPC", "CCR_PKG", "CCR_SUBMIT",
            "PackageNotFound",
            ]
@@ -90,12 +90,12 @@ def list_orphans():
     return msearch("0")
 
 
-def getlatest(num=10):
+def latest(num=10):
     """get the info for the latest num CCR packages, returns as a list"""
     return _get_ccr_json(LATEST, str(num))
 
 
-def geturl(package):
+def url(package):
     """get the URL of the package's CCR page"""
     try:
         ccrid = info(package).ID
@@ -105,27 +105,27 @@ def geturl(package):
     return url
 
 
-def getpkgurl(package):
+def pkg_url(package):
     """get the url to the source package"""
     path = "packages/" + package[:2] + "/" + package + "/"
     url = CCR_BASE + path + package + ".tar.gz"
     return url
 
 
-def getpkgbuild(package):
+def pkgbuild_url(package):
     """get the url to the online PKGBUILD viewer"""
     url = CCR_BASE + "pkgbuild_view.php?p=" + package
     return url
 
 
-def getpkgbuildraw(package):
+def pkgbuild_raw_url(package):
     """get the url to the actual PKGBUILD"""
     path = "packages/" + package[:2] + "/" + package + "/" + package + "/"
     url = CCR_BASE + path + "PKGBUILD"
     return url
 
 
-def getfileraw(package, f):
+def file_raw_url(package, f):
     """get the url to an arbitrary file f, like a .install"""
     path = "packages/" + package[:2] + "/" + package + "/" + package + "/"
     url = CCR_BASE + path + f
