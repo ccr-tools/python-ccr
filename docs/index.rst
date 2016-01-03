@@ -25,12 +25,12 @@ Functions
 .. autofunction:: ccr.info
 .. autofunction:: ccr.msearch
 .. autofunction:: ccr.list_orphans
-.. autofunction:: ccr.getlatest
-.. autofunction:: ccr.geturl
-.. autofunction:: ccr.getpkgurl
-.. autofunction:: ccr.getpkgbuild
-.. autofunction:: ccr.getpkgbuildraw
-.. autofunction:: ccr.getfileraw
+.. autofunction:: ccr.latest
+.. autofunction:: ccr.url
+.. autofunction:: ccr.pkg_url
+.. autofunction:: ccr.pkgbuild_url
+.. autofunction:: ccr.pkgbuild_raw_url
+.. autofunction:: ccr.file_raw_url
 
 Session Management
 ------------------
