@@ -17,7 +17,7 @@ import logging
 
 logging.basicConfig(level=logging.ERROR, format='>> %(levelname)s - %(message)s')
 
-CCR_BASE = "http://chakraos.org/ccr/"
+CCR_BASE = "https://chakraos.org/ccr/"
 CCR_RPC = CCR_BASE + "rpc.php?type="
 CCR_PKG = CCR_BASE + "packages.php"
 CCR_SUBMIT = CCR_BASE + "pkgsubmit.php"
@@ -26,6 +26,10 @@ SEARCH = "search"
 INFO = "info"
 MSEARCH = "msearch"
 LATEST = "getlatest"
+
+
+# session
+session = requests.Session()
 
 
 class PackageNotFound(ValueError):
@@ -49,7 +53,7 @@ def _get_ccr_json(method, arg):
     """returns the parsed json - for internal use only"""
     # arg must must be quoted to allow input like 'ls++-git'
     arg = urllib.parse.quote(arg)
-    with contextlib.closing(requests.get(CCR_RPC + method + ARG + arg)) as results:
+    with contextlib.closing(session.get(CCR_RPC + method + ARG + arg)) as results:
         return json.loads(results.text, object_hook=Struct)
 
 
