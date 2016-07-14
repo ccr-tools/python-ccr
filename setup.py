@@ -16,7 +16,7 @@ setup(
     version = __version__,
     author = 'ccr-tools',
     # FIXME create a valid ccr-tools support email
-    author_email = 'rshipp@chakraos.org',
+    author_email = 'rshipp@chakralinux.org',
     url = 'http://github.com/ccr-tools/python-ccr/',
     description = 'Library for accessing and working with the CCR.',
     long_description = open('README.rst').read(),

@@ -30,5 +30,5 @@ Contributing
 This project follows the git-flow_ branching model. Please submit pull
 requests to the ``development`` branch, not ``master``.
 
-.. _Chakra Community Repository: https://chakraos.org/ccr/
+.. _Chakra Community Repository: https://chakralinux.org/ccr/
 .. _git-flow: http://nvie.com/posts/a-successful-git-branching-model/

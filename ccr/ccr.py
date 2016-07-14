@@ -17,7 +17,7 @@ import logging
 
 logging.basicConfig(level=logging.ERROR, format='>> %(levelname)s - %(message)s')
 
-CCR_BASE = "https://chakraos.org/ccr/"
+CCR_BASE = "https://chakralinux.org/ccr/"
 CCR_RPC = CCR_BASE + "rpc.php?type="
 CCR_PKG = CCR_BASE + "packages.php"
 CCR_SUBMIT = CCR_BASE + "pkgsubmit.php"
